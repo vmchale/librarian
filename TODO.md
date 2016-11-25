@@ -1,0 +1,6 @@
+- [ ] create record and poop to json (make api if it does...)
+- [ ] possibly include barcode scanner
+- [ ] make it easy to delete a record (and prune when expired)
+- [ ] encryption idk
+- [ ] maybe use a real database?
+- [ ] search by user, due date
