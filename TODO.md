@@ -4,3 +4,7 @@
 - [ ] encryption idk
 - [ ] maybe use a real database?
 - [ ] search by user, due date
+- [ ] QR generator for library cards
+- [ ] barcode scanner from RWH to read isbn or whatever
+- [ ] auto send emails/texts to late books
+- [ ] make sure book can't be checked out if it's already checked out
