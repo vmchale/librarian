@@ -17,6 +17,8 @@ import Control.Monad (liftM2, mapM)
 import Types
 import QRCodes
 
+
+
 showBooks :: IO ()
 showBooks = (fmap head) getPatrons >>= showObject
 
