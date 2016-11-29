@@ -1,10 +1,16 @@
-- [ ] create record and poop to json (make api if it does...)
+- [x] create record and poop to json
+- [ ] make api if it does...)
 - [ ] possibly include barcode scanner
-- [ ] make it easy to delete a record (and prune when expired)
-- [ ] encryption idk
+- [x] make it easy to delete a record
+- [x] (and prune when expired)
+- [x] encryption idk
+- [ ] verify qr codes (not just bytestrings)
 - [ ] maybe use a real database?
-- [ ] search by user, due date
-- [ ] QR generator for library cards
+- [x] search by user
+- [ ] search by due date
+- [x] QR generator for library cards
 - [ ] barcode scanner from RWH to read isbn or whatever
 - [ ] auto send emails/texts to late books
 - [ ] make sure book can't be checked out if it's already checked out
+- [ ] make a parser for the .ris files... and potentially a bibtex generator?
+- [ ] interface with optparse-applicative!

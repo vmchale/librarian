@@ -1,6 +1,6 @@
 module Main where
 
-import LibraryDB
+import Options
 
 main :: IO ()
 main = exec

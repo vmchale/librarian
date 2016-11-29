@@ -1,12 +1,6 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveGeneric   #-}
-
-module LibraryDB
-    ( exec
-    ) where
+module LibraryDB where
 
 import Data.Aeson
-import Options.Applicative
 import Data.Time.Clock
 import Control.Lens
 import qualified Data.ByteString.Lazy.Char8 as BSL
@@ -23,39 +17,71 @@ import Control.Monad (liftM2, mapM)
 import Types
 import QRCodes
 
-exec :: IO ()
-exec = do
-    createBook $ newBook "In pursuit of pure reason" "Vanessa McHale"
-    (checkout (createPatron "The" "a@a.com") (newBook "In pursuit of pure reason" "Vanessa McHale")) >>= createQRCode
-    (fmap head) getBookDB >>= showObject
+showBooks :: IO ()
+showBooks = (fmap head) getPatrons >>= showObject
 
---ideally the qrcodes should be cryptographically signed?
+mkLabel :: Book -> IO ()
+mkLabel boo = createQRCode boo ("db/labels/" ++ (map toLower) (map (\c -> if c==' ' then '-' else c) (take 140 (view title boo))) ++ ".png")
+
+mkCard :: Patron -> IO ()
+mkCard pat = createSecureQRCode pat ("db/cards/" ++ (view email pat) ++ "-signed.png")
+
+updateQR :: IO ()
+updateQR = do
+    p <- getPatrons
+    b <- getBookDB
+    sequence_ $ map mkLabel b
+    sequence_ $ map mkCard p
 
 showObject :: (ToJSON a) => a -> IO ()
 showObject = BSL.putStrLn . encodePretty
 
 newBook :: String -> String -> Book
 newBook tit aut = Book { _title           = tit
-                          , _author          = aut
-                          , _isbn            = Nothing
-                          , _publisher       = Nothing
-                          , _publicationYear = Nothing
-                          , _checkoutLength  = 7 } --7 days by default
+                       , _author          = aut
+                       , _isbn            = Nothing
+                       , _publisher       = Nothing
+                       , _publicationYear = Nothing
+                       , _checkoutLength  = 7 } --7 days by default
 
 updateRecord :: (ToJSON a) => a -> FilePath -> IO ()
 updateRecord rec file = BSL.appendFile file toAppend where
     toAppend = (encode rec) `BSL.append` (BSL.singleton '\n')
 
+updateByCard :: Patron -> Book -> IO Patron
+updateByCard pat boo = (matchRecord pat) >>= ((flip checkout) boo)
+
+matchRecord :: Patron -> IO Patron
+matchRecord pat = fmap (head . (filter (\a -> (==) (view email pat) (view email a)))) getPatrons
+
 createBook :: Book -> IO ()
 createBook = flip updateRecord "db/library.json"
+
+replaceRecord :: (ToJSON a) => [a] -> FilePath -> IO ()
+replaceRecord (rec:recList) file = BSL.appendFile file rec'
+    where rec' = (encode rec) `BSL.append` (BSL.singleton '\n')
+replaceRecord rec file = BSL.writeFile file rec'
+    where rec' = (encode rec) `BSL.append` (BSL.singleton '\n')
+
+deleteBook :: Book -> IO ()
+deleteBook boo = do
+    newDB <- fmap (filter ((/=) boo)) getBookDB
+    replaceRecord newDB "db/library.json"
+
+deletePatron :: Patron -> IO ()
+deletePatron pat = do
+    p <- matchRecord pat
+    newDB <- fmap (filter (/=p)) getPatrons
+    replaceRecord newDB "db/patron.json"
 
 daysToDiffTime :: Integer -> DiffTime
 daysToDiffTime = secondsToDiffTime . (*86400)
 
+--problem: qr code needs to reflect something other than current record!
 createPatron :: String -> String -> Patron
 createPatron nam ema = Patron { _name   = nam
-                            , _record = []
-                            , _email  = email }
+                              , _record = []
+                              , _email  = email }
     where email = BS.unpack $ (toByteString . emailError) $ (emailAddress . BSL.toStrict . BSL.pack) ema
 
 newPatron :: Patron -> IO ()
@@ -80,19 +106,21 @@ findByPatron pat = map (view _1) $ view (record . simple) pat
 checkout :: Patron -> Book -> IO Patron
 checkout pat boo = getCurrentTime >>= (\time -> return $ over (record) ((:) (boo, time)) pat)
 
+return' :: Patron -> Book -> Patron
+return' pat boo = over (record) (filter ((/= boo) . (view _1))) pat
+
 searchByAuthor :: String -> IO [Book]
 searchByAuthor aut = fmap (filter (\boo -> view (author) boo == aut)) getBookDB
 
 searchByTitle :: String -> IO [Book]
 searchByTitle tit = fmap (filter (\boo -> (==) (map toLower $ view (title) boo) (map toLower tit))) getBookDB
---use toLower to make it case insensitive
 
 --sortByDueDate :: [Book] -> IO [Book]
 --sortByDueDate boo = boo >>= ((\boo1 boo2 -> (liftM2 compare) (dueDate boo1) (dueDate boo2)) >>= sortBy)
 --boo >>= (sortBy (\boo1 boo2 -> (liftM2 compare) <$> dueDate <*> boo1 <*> boo2))
 
 dueDate :: Book -> IO UTCTime
-dueDate boo = fmap ((view _2 . head) . (filter (\i -> (==) boo (view (_1) i)))) bookPairs --addUTCTime does something stupid idk
+dueDate boo = fmap ((view _2 . head) . (filter (\i -> (==) boo (view (_1) i)))) bookPairs --addUTCTime does something stupid idk fix it
 
 bookPairs :: IO [(Book, UTCTime)]
 bookPairs = fmap (concat . (map (view record))) getPatrons
