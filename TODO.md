@@ -13,4 +13,4 @@
 - [ ] auto send emails/texts to late books
 - [ ] make sure book can't be checked out if it's already checked out
 - [ ] make a parser for the .ris files... and potentially a bibtex generator?
-- [ ] interface with optparse-applicative!
+- [x] interface with optparse-applicative!

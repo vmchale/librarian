@@ -2,7 +2,9 @@
 rm -rf db/
 mkdir -p db/labels
 mkdir db/cards
-library new-book --title "In pursuit of pure reason" --author "Vanessa McHale" -j --book /dev/null -u /dev/null
+library new-book --title "Theoretical Physics" --author "Georg Joos" -j --book /dev/null -u /dev/null
 library add-user -u "Vanessa McHale" -e "tmchale@wisc.edu" --book /dev/null -u /dev/null -j
-library checkout -u "db/patron.json" --book "library.json" -j
+library add-user -u "Sarah Friedland" -e "sfriedland@wisc.edu" --book /dev/null -u /dev/null -j
 library print-card -e "tmchale@wisc.edu" -u /dev/null --book /dev/null
+library checkout -u "db/patron.json" --book "db/library.json" -j
+mkCards

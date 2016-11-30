@@ -17,6 +17,7 @@ import Control.Monad (liftM2, mapM)
 import Types
 import QRCodes
 import Data.Foldable (fold)
+import System.Directory
 
 showBooks :: IO ()
 showBooks = (fmap head) getPatrons >>= showObject
@@ -25,7 +26,9 @@ mkLabel :: Book -> IO ()
 mkLabel boo = createQRCode boo ("db/labels/" ++ (map toLower) (map (\c -> if c==' ' then '-' else c) (take 140 (view title boo))) ++ ".png")
 
 mkCard :: Patron -> IO ()
-mkCard pat = createSecureQRCode pat ("db/cards/" ++ (view email pat) ++ "-signed.png")
+mkCard pat = do 
+    createQRCode pat ("db/cards/" ++ (view email pat) ++ ".png")
+    createSecureQRCode pat ("db/cards/" ++ (view email pat) ++ "-signed.png")
 
 updatePatron :: Patron -> IO ()
 updatePatron = (\p -> fold [ deletePatron p, 
@@ -63,10 +66,9 @@ createBook :: Book -> IO ()
 createBook = flip updateRecord "db/library.json"
 
 replaceRecord :: (ToJSON a) => [a] -> FilePath -> IO ()
-replaceRecord (rec:recList) file = BSL.appendFile file rec'
-    where rec' = (encode rec) `BSL.append` (BSL.singleton '\n')
-replaceRecord rec file = BSL.writeFile file rec'
-    where rec' = (encode rec) `BSL.append` (BSL.singleton '\n')
+replaceRecord list file = do
+    removeFile file
+    fold $ map (flip updateRecord file) list
 
 deleteBook :: Book -> IO ()
 deleteBook boo = do
@@ -76,7 +78,7 @@ deleteBook boo = do
 deletePatron :: Patron -> IO ()
 deletePatron pat = do
     p <- matchRecord pat
-    newDB <- fmap (filter (/=p)) getPatronsStrict
+    newDB <- fmap (filter (/=p)) getPatrons
     replaceRecord newDB "db/patron.json"
 
 daysToDiffTime :: Integer -> DiffTime
@@ -134,13 +136,14 @@ bookPairs :: IO [(Book, UTCTime)]
 bookPairs = fmap (concat . (map (view record))) getPatrons
 
 getRecord :: (FromJSON a) => FilePath -> IO [a]
-getRecord path = fmap (map (stripJSON . decode')) (fmap BSL.lines (BSL.readFile path)) --possibly revisit to make lazy if that improves performance
-
-getRecordStrict :: (FromJSON a) => FilePath -> IO [a]
-getRecordStrict path = fmap (map (stripJSON . decode')) (fmap BSL.lines (fmap BSL.fromStrict $ BS.readFile path)) --possibly revisit to make lazy if that improves performance
-
-getPatronsStrict :: IO [Patron]
-getPatronsStrict = getRecordStrict "db/patron.json"
+getRecord path = do
+    tmp <- getTemporaryDirectory
+    let path'= (tmp ++ "/" ++ (reverse $ takeWhile (/= '/') $ reverse path))
+    copyFile path path'
+    --tmpDir <- getTemporaryDirectory
+    --tmp <- openTempFile path (tmp ++ "/" ++ (reverse $ takeWhile (/= '/') $ reverse path))
+    --(view _2 tmp) >>= hGetContents
+    fmap (map (stripJSON . decode')) (fmap BSL.lines (BSL.readFile path')) --possibly revisit to make lazy if that improves performance
 
 getBookDB :: IO [Book]
 getBookDB = getRecord "db/library.json"

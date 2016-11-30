@@ -8,6 +8,7 @@ To make sure bash completions run correctly, run `bash/mkCompletions` as well. Y
 ```
 mkdir -p db/labels
 mkdir db/cards
+mkdir hamlet/cards
 ```
 
 to ensure the right folders are in place
