@@ -1,11 +1,16 @@
 ##Install
 First, you'll need to get the C library `libqrencode` from [here](https://github.com/fukuchi/libqrencode)
 
-Then type
-```stack install```
-in the appropriate library.
+Then type `stack install` in the appropriate library.
 
-To make sure bash completions run correctly, run `bash/mkCompletions` as well.
+To make sure bash completions run correctly, run `bash/mkCompletions` as well. You might also have to do
+
+```
+mkdir -p db/labels
+mkdir db/cards
+```
+
+to ensure the right folders are in place
 
 ##Usage
 To help you get started, there is a bash file called `examples` in the appropriate directory, which has many of the common commands you will issue. 
