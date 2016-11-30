@@ -16,8 +16,7 @@ import Data.List (sortBy)
 import Control.Monad (liftM2, mapM)
 import Types
 import QRCodes
-
-
+import Data.Foldable (fold)
 
 showBooks :: IO ()
 showBooks = (fmap head) getPatrons >>= showObject
@@ -27,6 +26,10 @@ mkLabel boo = createQRCode boo ("db/labels/" ++ (map toLower) (map (\c -> if c==
 
 mkCard :: Patron -> IO ()
 mkCard pat = createSecureQRCode pat ("db/cards/" ++ (view email pat) ++ "-signed.png")
+
+updatePatron :: Patron -> IO ()
+updatePatron = (\p -> fold [ deletePatron p, 
+                             newPatron p ])
 
 updateQR :: IO ()
 updateQR = do
@@ -73,7 +76,7 @@ deleteBook boo = do
 deletePatron :: Patron -> IO ()
 deletePatron pat = do
     p <- matchRecord pat
-    newDB <- fmap (filter (/=p)) getPatrons
+    newDB <- fmap (filter (/=p)) getPatronsStrict
     replaceRecord newDB "db/patron.json"
 
 daysToDiffTime :: Integer -> DiffTime
@@ -108,6 +111,9 @@ findByPatron pat = map (view _1) $ view (record . simple) pat
 checkout :: Patron -> Book -> IO Patron
 checkout pat boo = getCurrentTime >>= (\time -> return $ over (record) ((:) (boo, time)) pat)
 
+patronByBook :: Book -> IO Patron
+patronByBook boo = (fmap head) $ fmap (filter (\p -> boo `elem` (map (view _1) (view record p)))) getPatrons
+
 return' :: Patron -> Book -> Patron
 return' pat boo = over (record) (filter ((/= boo) . (view _1))) pat
 
@@ -128,7 +134,13 @@ bookPairs :: IO [(Book, UTCTime)]
 bookPairs = fmap (concat . (map (view record))) getPatrons
 
 getRecord :: (FromJSON a) => FilePath -> IO [a]
-getRecord path = fmap (map (stripJSON . decode')) (fmap BSL.lines (BSL.readFile path))
+getRecord path = fmap (map (stripJSON . decode')) (fmap BSL.lines (BSL.readFile path)) --possibly revisit to make lazy if that improves performance
+
+getRecordStrict :: (FromJSON a) => FilePath -> IO [a]
+getRecordStrict path = fmap (map (stripJSON . decode')) (fmap BSL.lines (fmap BSL.fromStrict $ BS.readFile path)) --possibly revisit to make lazy if that improves performance
+
+getPatronsStrict :: IO [Patron]
+getPatronsStrict = getRecordStrict "db/patron.json"
 
 getBookDB :: IO [Book]
 getBookDB = getRecord "db/library.json"
