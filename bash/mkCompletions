@@ -1,0 +1,3 @@
+library --bash-completion-script `which library` > tmp
+sudo cp tmp /etc/bash_completion.d/library
+rm tmp

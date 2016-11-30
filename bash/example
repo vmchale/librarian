@@ -1,0 +1,7 @@
+#!/bin/bash
+rm db/*
+rm db/tmchale@wisc.edu-signed.png
+library new-book --title "In pursuit of pure reason" --author "Vanessa McHale" -j --book /dev/null -u /dev/null
+library add-user -u "Vanessa McHale" -e "tmchale@wisc.edu" --book /dev/null -u /dev/null -j
+library checkout -u "db/patron.json" --book "library.json" -j
+library print-card -e "tmchale@wisc.edu" -u /dev/null --book /dev/null
