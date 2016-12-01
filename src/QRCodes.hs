@@ -5,10 +5,10 @@ module QRCodes where
 
 import Data.Aeson
 import Data.QRCode
-import Codec.Picture.Types as T --maybe delete
-import Codec.Picture.Png (writePng) -- maybe delete
+import Codec.Picture.Types as T
+import Codec.Picture.Png (writePng)
 import Data.Word (Word8)
-import qualified Data.Vector.Storable as V --maybe delete
+import qualified Data.Vector.Storable as V
 import Data.ByteString.Lazy (toStrict)
 import qualified Data.ByteString as BS
 import Data.List (replicate)
@@ -25,13 +25,7 @@ import Data.Either (either)
 import Jose.Jwt (JwtError)
 import Jose.Jws (rsaDecode)
 import Data.Bits ((.&.))
-import Data.Array.Repa as R
-import Data.Array.Repa.IO.DevIL
-import Data.Array.Repa.Eval (fromList)
-import Data.Array.Repa.Repr.ForeignPtr (F)
-import Data.Array.Repa.Repr.ByteString (fromByteString)
 
-checkSig :: BS.ByteString -> IO (Either JwtError BS.ByteString)
 checkSig tok = do
     key <- fmap read $ readFile "key.hk"
     let jws = rsaDecode key tok
@@ -61,39 +55,13 @@ liftEither = either (fail . show)
 
 createQRCode :: (ToJSON a) => a -> FilePath -> IO ()
 createQRCode object filepath = regenerate filepath make
-    where make = let input = toStrict $ encode object in byteStringToQR' input filepath
+    where make = let input = toStrict $ encode object in byteStringToQR input filepath
 
 byteStringToQR :: BS.ByteString -> FilePath -> IO ()
 byteStringToQR input filepath = do
     smallMatrix <- (fmap toMatrix) $ encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False
     let qrMatrix = fattenList 8 $ P.map (fattenList 8) smallMatrix
     writePng filepath (encodePng qrMatrix)
-
-byteStringToQR' :: BS.ByteString -> FilePath -> IO ()
-byteStringToQR' input filepath = do
-    --smolMatrix <- (fmap toMatrix) $ encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False
-    --let qrMatrix = encodePng' smolMatrix
-    qrMatrix <- (flip (>>=)) toMatrix' $ encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False
-    toWrite <- (flip (>>=)) fatten $ scale qrMatrix
-    runIL $ writeImage filepath (Grey toWrite)
-
-scale :: R.Array U DIM2 Word8 -> IO (R.Array F DIM2 Word8)
-scale smol = (flip (>>=) computeP) $ return $ fromFunction sh (\(Z:.x:.y) -> ((view _2) (toFunction smol)) (Z:.(x `div` 8):.(y `div` 8)))
-    where sh = (\(Z:.x:.y) -> Z:.((*8) x):.((*8) y)) (extent smol)
-
-fatten :: R.Array F DIM2 Word8 -> IO (R.Array F DIM2 Word8) --idk maybe use free monad here?
-fatten = computeP . (R.map ((*255) . swapWord)) -- computeP . (extend (Any :. All :. All :. (0::Int)))
-
---QRCode -> Array F DIM2 Word8
-toMatrix' code = copyP $ fromByteString sh (BS.map tobin (getQRCodeString code))
-    where sh      = (Z:.dim:.dim)
-          dim     = (getQRCodeWidth code)
-          tobin c = c .&. 1
-
-encodePng' :: [[Word8]] -> R.Array U DIM2 Word8
-encodePng' list = fromList sh (concat list)--map over the repa array in future!
-    where dim = length list
-          sh  = (Z:.dim:.dim)
 
 encodePng :: [[Word8]] -> T.Image Word8
 encodePng matrix = Image dim dim vector
