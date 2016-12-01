@@ -1,5 +1,6 @@
 #!/bin/bash
-rm -rf db/
+rm db/*
+rm -rf db/labels
 mkdir -p db/labels
 mkdir db/cards
 library new-book --title "Theoretical Physics" --author "Georg Joos" -j --book /dev/null -u /dev/null

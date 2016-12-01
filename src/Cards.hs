@@ -23,7 +23,7 @@ exec = fold [ make ]--, cardTest ]
 defHtml nam ema =
     $(hamletFile "hamlet/default.hamlet")
 
-make :: IO () --obviously, soon we're gonna want to interpolate so that things work out nicely
+make :: IO ()
 make = do
     inputFiles <- fmap (map (\p -> defHtml (view name p) (view email p))) getPatrons
     outputFiles <- fmap (map ((flip (++) ".html") . (takeWhile (/= '@')) . (view email))) getPatrons

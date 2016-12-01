@@ -32,26 +32,30 @@ checkSig tok = do
     return $ (fmap (view _2)) jws
 
 createSecureQRCode :: (ToJSON a) => a -> FilePath -> IO ()
-createSecureQRCode object filepath = do
-    switch <- doesFileExist "key.hk"
-    if not switch then do
-        putStrLn "generating key..."
-        key <- Cr.generate 256 0x10001
-        writeFile "key.hk" (show key)
-    else
-        return ()
-    key' <- fmap read $ readFile "key.hk" :: IO (Cr.PublicKey, Cr.PrivateKey)
-    signedToken <- rsaEncode RS256 (view _2 key') (toStrict $ encode object)
-    let signed = fmap (unJwt) signedToken
-    output <- liftEither id $ fmap (flip byteStringToQR filepath) signed
-    putStrLn $ show output
+createSecureQRCode object filepath = regenerate filepath make
+    where make = do
+                    switch <- doesFileExist "key.hk"
+                    if not switch then do
+                        putStrLn "generating key..."
+                        key <- Cr.generate 256 0x10001
+                        writeFile "key.hk" (show key)
+                    else
+                        return ()
+                    key' <- fmap read $ readFile "key.hk" :: IO (Cr.PublicKey, Cr.PrivateKey)
+                    signedToken <- rsaEncode RS256 (view _2 key') (toStrict $ encode object)
+                    let signed = fmap (unJwt) signedToken
+                    output <- liftEither id $ fmap (flip byteStringToQR filepath) signed
+                    putStrLn $ show output
+
+regenerate :: FilePath -> IO () -> IO ()
+regenerate filepath action = do { regen <- doesFileExist filepath ; if regen then putStrLn "already generated, skipping..." else action }
 
 liftEither :: (Show b, Monad m) => (t -> m a) -> Either b t -> m a
 liftEither = either (fail . show)
 
 createQRCode :: (ToJSON a) => a -> FilePath -> IO ()
-createQRCode object filepath = let input = toStrict $ encode object in
-    byteStringToQR input filepath
+createQRCode object filepath = regenerate filepath make
+    where make = let input = toStrict $ encode object in byteStringToQR input filepath
 
 byteStringToQR :: ByteString -> FilePath -> IO ()
 byteStringToQR input filepath = do
