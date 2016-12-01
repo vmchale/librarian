@@ -6,5 +6,6 @@ library new-book --title "Theoretical Physics" --author "Georg Joos" -j --book /
 library add-user -u "Vanessa McHale" -e "tmchale@wisc.edu" --book /dev/null -u /dev/null -j
 library add-user -u "Sarah Friedland" -e "sfriedland@wisc.edu" --book /dev/null -u /dev/null -j
 library print-card -e "tmchale@wisc.edu" -u /dev/null --book /dev/null
+library print-card -e "sfriedland@wisc.edu" -u /dev/null --book /dev/null
 library checkout -u "db/patron.json" --book "db/library.json" -j
-mkCards
+mkCards && gnome-open hamlet/cards/sfriedland.html

@@ -1,0 +1,12 @@
+<head>
+    <style>
+        .text {
+            margin-left: 330px;
+            font-family: "Palatino Linotype", "Book Antiqua", "Palatino";
+            align: left;
+        }
+<body>
+    <img align="left" width="300" src="FILENAME_HERE">
+    <div class="text">
+        <h1>#{nam}
+        <p>#{ema}
