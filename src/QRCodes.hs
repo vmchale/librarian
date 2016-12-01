@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module QRCodes where
 
@@ -9,7 +10,7 @@ import Codec.Picture.Png (writePng) -- maybe delete
 import Data.Word (Word8)
 import qualified Data.Vector.Storable as V --maybe delete
 import Data.ByteString.Lazy (toStrict)
-import Data.ByteString (ByteString, pack, unpack)
+import qualified Data.ByteString as BS
 import Data.List (replicate)
 import Data.Char (toLower)
 import Prelude as P
@@ -28,8 +29,9 @@ import Data.Array.Repa as R
 import Data.Array.Repa.IO.DevIL
 import Data.Array.Repa.Eval (fromList)
 import Data.Array.Repa.Repr.ForeignPtr (F)
+import Data.Array.Repa.Repr.ByteString (fromByteString)
 
-checkSig :: ByteString -> IO (Either JwtError ByteString)
+checkSig :: BS.ByteString -> IO (Either JwtError BS.ByteString)
 checkSig tok = do
     key <- fmap read $ readFile "key.hk"
     let jws = rsaDecode key tok
@@ -48,7 +50,7 @@ createSecureQRCode object filepath = regenerate filepath make
                     key' <- fmap read $ readFile "key.hk" :: IO (Cr.PublicKey, Cr.PrivateKey)
                     signedToken <- rsaEncode RS256 (view _2 key') (toStrict $ encode object)
                     let signed = fmap (unJwt) signedToken
-                    output <- liftEither id $ fmap (flip byteStringToQR' filepath) signed
+                    output <- liftEither id $ fmap (flip byteStringToQR filepath) signed
                     putStrLn $ show output
 
 regenerate :: FilePath -> IO () -> IO ()
@@ -59,33 +61,37 @@ liftEither = either (fail . show)
 
 createQRCode :: (ToJSON a) => a -> FilePath -> IO ()
 createQRCode object filepath = regenerate filepath make
-    where make = let input = toStrict $ encode object in byteStringToQR input filepath
+    where make = let input = toStrict $ encode object in byteStringToQR' input filepath
 
-byteStringToQR :: ByteString -> FilePath -> IO ()
+byteStringToQR :: BS.ByteString -> FilePath -> IO ()
 byteStringToQR input filepath = do
     smallMatrix <- (fmap toMatrix) $ encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False
     let qrMatrix = fattenList 8 $ P.map (fattenList 8) smallMatrix
     writePng filepath (encodePng qrMatrix)
 
-byteStringToQR' :: ByteString -> FilePath -> IO ()
+byteStringToQR' :: BS.ByteString -> FilePath -> IO ()
 byteStringToQR' input filepath = do
-    smolMatrix <- (fmap toMatrix) $ encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False
-    let qrMatrix = encodePng' smolMatrix
+    --smolMatrix <- (fmap toMatrix) $ encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False
+    --let qrMatrix = encodePng' smolMatrix
+    qrMatrix <- (flip (>>=)) toMatrix' $ encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False
     toWrite <- (flip (>>=)) fatten $ scale qrMatrix
-    runIL $ writeImage filepath (RGB toWrite)
-
---unpack' :: ByteString -> Vector (Word8)
---unpack' bs = byteStringToVector 
+    runIL $ writeImage filepath (Grey toWrite)
 
 scale :: R.Array U DIM2 Word8 -> IO (R.Array F DIM2 Word8)
-scale smol = (flip (>>=) computeP) $ return $ fromFunction sh (\(Z:.x:.y) -> ((view _2) (toFunction smol)) (Z:.(x `div` 2):.(y `div` 2)))
-    where sh = (\(Z:.x:.y) -> Z:.((*2) x):.((*2) y)) (extent smol)
+scale smol = (flip (>>=) computeP) $ return $ fromFunction sh (\(Z:.x:.y) -> ((view _2) (toFunction smol)) (Z:.(x `div` 8):.(y `div` 8)))
+    where sh = (\(Z:.x:.y) -> Z:.((*8) x):.((*8) y)) (extent smol)
 
-fatten :: R.Array F DIM2 Word8 -> IO (R.Array F DIM3 Word8) --idk maybe use free monad here?
-fatten = computeP . (extend (Any :. All :. All :. (0::Int)))
+fatten :: R.Array F DIM2 Word8 -> IO (R.Array F DIM2 Word8) --idk maybe use free monad here?
+fatten = computeP . (R.map ((*255) . swapWord)) -- computeP . (extend (Any :. All :. All :. (0::Int)))
+
+--QRCode -> Array F DIM2 Word8
+toMatrix' code = copyP $ fromByteString sh (BS.map tobin (getQRCodeString code))
+    where sh      = (Z:.dim:.dim)
+          dim     = (getQRCodeWidth code)
+          tobin c = c .&. 1
 
 encodePng' :: [[Word8]] -> R.Array U DIM2 Word8
-encodePng' list = fromList sh (concat list)
+encodePng' list = fromList sh (concat list)--map over the repa array in future!
     where dim = length list
           sh  = (Z:.dim:.dim)
 

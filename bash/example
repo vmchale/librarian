@@ -1,6 +1,7 @@
 #!/bin/bash
 rm db/*
 rm -rf db/labels
+rm db/cards/yyu*
 mkdir -p db/labels
 mkdir db/cards
 library new-book --title "Theoretical Physics" --author "Georg Joos" -j --book /dev/null -u /dev/null
@@ -11,4 +12,4 @@ library print-card -e "tmchale@wisc.edu" -u /dev/null --book /dev/null
 library print-card -e "sfriedland@wisc.edu" -u /dev/null --book /dev/null
 library print-card -e "yyu68@wisc.edu" -u /dev/null --book /dev/null
 library checkout -u "db/patron.json" --book "db/library.json" -j
-mkCards && gnome-open hamlet/cards/sfriedland.html
+mkCards && gnome-open hamlet/cards/yyu68.html
