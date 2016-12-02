@@ -1,7 +1,9 @@
 - [x] create record and poop to json
+- [x] make pretty cards with hamlet
+- [ ] make pretty cards with pandoc
 - [ ] make api if it does...)
-- [ ] possibly include barcode scanner
 - [x] make it easy to delete a record
+- [ ] make the signature sizes smaller? (and not encrypted cuz we don't need that)
 - [x] (and prune when expired)
 - [x] encryption idk
 - [ ] verify qr codes (not just bytestrings)
@@ -12,5 +14,6 @@
 - [ ] barcode scanner from RWH to read isbn or whatever
 - [ ] auto send emails/texts to late books
 - [ ] make sure book can't be checked out if it's already checked out
-- [ ] make a parser for the .ris files... and potentially a bibtex generator?
+- [ ] make a parser for the .ris files... (easy) 
+- [ ] and potentially a bibtex generator?
 - [x] interface with optparse-applicative!

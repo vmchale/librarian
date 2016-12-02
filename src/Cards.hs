@@ -34,4 +34,4 @@ rightImage :: String -> String -> String
 rightImage ema = replace "FILENAME_HERE" ("../../db/cards/" ++ ema ++ ".png")
 
 cardTest :: IO ()
-cardTest = readCreateProcess (shell "pandoc hamlet/cards/tmchale.html -f html -t LaTeX -o hamlet/cards/card.pdf && gnome-open hamlet/cards/card.pdf") "" >>= print
+cardTest = readCreateProcess (shell "cd hamlet/cards && pandoc tmchale.html -f html -t latex -o card.pdf && gnome-open card.pdf && cd -") "" >>= print
