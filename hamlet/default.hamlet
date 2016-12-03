@@ -9,11 +9,18 @@
             font-family: helvetica, arial, sans-serif;
             font-size: 150%;
         }
+        .fee
+            {
+            color:#4d4d4d;
+            font-family: helvetica, arial, sans-serif;
+            font-size: 75%;
+            margin-top: -12px;
+        }
 <body>
     <img align="left" width="200px" src="FILENAME_HERE">
     <div class="text">
         <p .logo>Vanessa McHale home library
+        <p .fee>#{"$"}1 fee for laminated replacement
         <br>
         <h1>#{nam}
         <p>#{ema}
-        <br>

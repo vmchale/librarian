@@ -97,7 +97,6 @@ deletePatron pat = do
 daysToDiffTime :: Integer -> DiffTime
 daysToDiffTime = secondsToDiffTime . (*86400)
 
---problem: qr code needs to reflect something other than current record!
 createPatron :: String -> String -> Patron
 createPatron nam ema = Patron { _name   = nam
                               , _record = []

@@ -20,6 +20,7 @@ library
                      , Options
                      , Cards
                      , Parser
+                     --, QRRepa
   other-modules:       Types
   build-depends:       base >= 4.7 && < 5
                      , time

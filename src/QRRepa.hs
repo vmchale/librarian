@@ -64,19 +64,19 @@ byteStringToQR' input filepath = do
     smolMatrix <- (fmap toMatrix) $ encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False
     let qrMatrix = encodePng' smolMatrix
     qrMatrix <- (flip (>>=)) toMatrix' $ encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False
-    toWrite <- (flip (>>=)) (fatten >=> flipper) $ scale qrMatrix
+    toWrite <- (scale . fatten . flipper) qrMatrix
     runIL $ writeImage filepath (Grey toWrite)
 
-scale :: R.Array U DIM2 Word8 -> IO (R.Array F DIM2 Word8)
-scale smol = (flip (>>=) compute) $ return $ fromFunction sh (\(Z:.x:.y) -> ((view _2) (toFunction smol)) (Z:.(x `div` 8):.(y `div` 8)))
+scale :: R.Array D DIM2 Word8 -> IO (R.Array F DIM2 Word8)
+scale smol = fromFunction sh (\(Z:.x:.y) -> ((view _2) (toFunction smol)) (Z:.(x `div` 8):.(y `div` 8)))
     where sh = (\(Z:.x:.y) -> Z:.((*8) x):.((*8) y)) (extent smol)
 
 --rename this lol
-fatten :: R.Array F DIM2 Word8 -> IO (R.Array F DIM2 Word8) --idk maybe use free monad here?
-fatten = compute . (R.map ((*255) . swapWord))
+fatten :: R.Array D DIM2 Word8 -> R.Array D DIM2 Word8 --idk maybe use free monad here?
+fatten = (R.map ((*255) . swapWord))
 
-flipper :: R.Array F DIM2 Word8 -> IO (R.Array F DIM2 Word8)
-flipper = (\arr -> let l = head . listOfShape $ extent arr in compute $ backpermute (extent arr) (\(Z:.x:.y) -> (Z:.(l-x-1):.y)) arr)
+flipper :: R.Array F DIM2 Word8 ->  R.Array D DIM2 Word8
+flipper = (\arr -> let l = head . listOfShape $ extent arr in backpermute (extent arr) (\(Z:.x:.y) -> (Z:.(l-x-1):.y)) arr)
 
 --QRCode -> Array F DIM2 Word8
 toMatrix' code = copyP $ fromByteString sh (BS.map tobin (getQRCodeString code))
