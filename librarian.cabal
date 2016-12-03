@@ -41,6 +41,9 @@ library
                      , blaze-html
                      , MissingH
                      , monadlist
+                     , smtp-mail
+                     , mime-mail
+                     , text
   default-language:    Haskell2010
 
 executable library

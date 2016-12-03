@@ -19,14 +19,14 @@ data Com = AddBook { title' :: String , author' :: String }
            | Return
            | Renew
            | PrintCard { email' :: String }
---with subcommands I could have lenses for my applicative parser combinators? wtf.
+--with subcommands I could have lenses for my applicative parser combinators? wtheck.
 
 exec :: IO ()
 exec = execParser opts >>= pick
     where
         opts = info (helper <*> program)
             (fullDesc
-            <> progDesc "Manage a library via json-poopDB and make library cards" --one way to serialize database access: make a monad? unlike io the monoidal addition acctually sequences it weird.
+            <> progDesc "Manage a library via json-poopDB and make library cards"
             <> header "library - a home library manager"
             )
 

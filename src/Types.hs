@@ -13,7 +13,7 @@ data Book = Book { _title           :: String
                  , _isbn            :: Maybe String
                  , _publisher       :: Maybe String
                  , _publicationYear :: Maybe String
-                 , _checkoutLength  :: Integer --should be number of days
+                 , _checkoutLength  :: Integer --in days
                  } deriving (Show, Generic, Eq)
 
 makeLenses ''Book
@@ -25,7 +25,7 @@ instance FromJSON Book
 data Patron = Patron { _name   :: String
                      , _record :: [(Book, UTCTime)]
                      , _email  :: String
-                     } deriving (Generic, Eq)
+                     } deriving (Show, Generic, Eq)
 makeLenses ''Patron
 
 instance ToJSON Patron where

@@ -1,3 +1,6 @@
+{-# LANGUAGE RankNTypes        #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module LibraryDB where
 
 import Data.Aeson
@@ -19,6 +22,9 @@ import QRCodes
 import Data.Foldable (fold)
 import System.Directory
 import Control.Monad.ListM
+import Network.Mail.SMTP
+import Network.Mail.Mime hiding (simpleMail)
+import qualified Data.Text as T 
 
 showBooks :: IO ()
 showBooks = (fmap head) getPatrons >>= showObject
@@ -27,7 +33,7 @@ mkLabel :: Book -> IO ()
 mkLabel boo = fold [ createQRCode boo (name ++ ".png")
                    , poopJSON boo (name ++ ".json")
                    ]
-    where name = filter (not . ((flip elem) ":;&#")) $ "db/labels/" ++ (map toLower) (map (\c -> if c==' ' then '-' else c) (take 60 (view title boo)))
+    where name = filter (not . ((flip elem) (":;&#" :: String))) $ "db/labels/" ++ (map toLower) (map (\c -> if c==' ' then '-' else c) (take 60 (view title boo)))
 
 mkCard :: Patron -> IO ()
 mkCard pat = do 
@@ -38,6 +44,8 @@ mkCard pat = do
 updatePatron :: Patron -> IO ()
 updatePatron = (\p -> fold [ deletePatron p, 
                              newPatron p ])
+updateField :: a -> Lens' a b -> b -> a
+updateField obj lens new = set lens new obj
 
 updateQR :: IO ()
 updateQR = do
@@ -101,7 +109,7 @@ newPatron = flip updateRecord "db/patron.json"
 
 emailError :: Maybe EmailAddress -> EmailAddress
 emailError (Just a) = a
-emailError Nothing = error "Email format not valid" --actually maybe just repeat or something? in optparse-applicative or gen. a dsl idk
+emailError Nothing = error "Email format not valid"
 
 isDue :: Book -> IO Bool
 isDue = ((liftM2 (>=)) getCurrentTime) . dueDate
@@ -117,8 +125,16 @@ allDueBooks = getBookDB >>= (filterMP isDue)
 
 sendReminders :: IO ()
 sendReminders = do
-    --search users for late books and then send them emails
+    delinquentUsers >>= print --for debug only
+    fmap (map (sender . emailGen)) (delinquentUsers)
     putStrLn "...emails sent successfully"
+
+sender :: Mail -> IO ()
+sender mail = (readFile "pw") >>= (\pw -> sendMailWithLogin' "smtp.gmail.com" 465 "vamchale@gmail.com" pw mail)
+
+emailGen :: Patron -> Mail
+emailGen pat = simpleMail (Address Nothing "library@vmchale.com") ([Address (Just (T.pack $ view name pat)) (T.pack $ view email pat)]) [] [] "Overdue Books" [(plainTextPart msg)]
+    where msg = "Our records indicate you have an overdue book." --make it actually useful
 
 findByPatron :: Patron -> [Book]
 findByPatron pat = map (view _1) $ view (record . simple) pat
@@ -148,7 +164,7 @@ sortByDueDate :: [Book] -> IO [Book]
 sortByDueDate boo = sortByM (\boo1 boo2 -> (liftM2 compare) (dueDate boo1) (dueDate boo2)) boo
 
 dueDate :: Book -> IO UTCTime
-dueDate boo = fmap ((addUTCTime t) . (view _2 . head) . (filter (\i -> (==) boo (view (_1) i)))) bookPairs --addUTCTime does something stupid idk fix it
+dueDate boo = fmap ((addUTCTime t) . (view _2 . head) . (filter (\i -> (==) boo (view (_1) i)))) bookPairs
     where t = fromInteger ((*604800) $ (view checkoutLength boo))
 
 bookPairs :: IO [(Book, UTCTime)]
@@ -159,7 +175,7 @@ getRecord path = do
     tmp <- getTemporaryDirectory
     let path'= (tmp ++ "/" ++ (reverse $ takeWhile (/= '/') $ reverse path))
     copyFile path path'
-    fmap (map (stripJSON . decode')) (fmap BSL.lines (BSL.readFile path')) --possibly revisit to make lazy if that improves performance
+    fmap (map (stripJSON . decode')) (fmap BSL.lines (BSL.readFile path'))
 
 getBookDB :: IO [Book]
 getBookDB = getRecord "db/library.json"

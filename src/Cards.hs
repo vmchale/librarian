@@ -19,7 +19,7 @@ render = undefined
 
 exec :: IO ()
 exec = fold [ make
-            , libRec ]--, cardTest ]
+            , libRec ]
 
 defHtml nam ema =
     $(hamletFile "hamlet/default.hamlet")
