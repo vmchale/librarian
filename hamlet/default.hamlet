@@ -1,12 +1,19 @@
 <head>
     <style>
         .text {
-            margin-left: 330px;
+            margin-left: 230px;
             font-family: "Palatino Linotype", "Book Antiqua", "Palatino";
-            align: left;
+        }
+        .logo {
+            color: #000080;
+            font-family: helvetica, arial, sans-serif;
+            font-size: 150%;
         }
 <body>
-    <img align="left" width="300" src="FILENAME_HERE">
+    <img align="left" width="200px" src="FILENAME_HERE">
     <div class="text">
+        <p .logo>Vanessa McHale home library
+        <br>
         <h1>#{nam}
         <p>#{ema}
+        <br>

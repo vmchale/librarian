@@ -18,10 +18,14 @@ import Data.List.Utils (replace)
 render = undefined
 
 exec :: IO ()
-exec = fold [ make ]--, cardTest ]
+exec = fold [ make
+            , libRec ]--, cardTest ]
 
 defHtml nam ema =
     $(hamletFile "hamlet/default.hamlet")
+
+libRec :: IO ()
+libRec =(fmap fold) $ getBookDB >>= sequence . (map (mkLabel))
 
 make :: IO ()
 make = do

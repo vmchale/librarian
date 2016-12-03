@@ -3,17 +3,19 @@
 - [ ] make pretty cards with pandoc
 - [ ] make api if it does...)
 - [x] make it easy to delete a record
-- [ ] make the signature sizes smaller? (and not encrypted cuz we don't need that)
+- [ ] make the signature sizes smaller?
+- [x] (and not encrypted cuz we don't need that)
 - [x] (and prune when expired)
 - [x] encryption idk
 - [ ] verify qr codes (not just bytestrings)
 - [ ] maybe use a real database?
 - [x] search by user
-- [ ] search by due date
+- [x] search by due date
+- [ ] get outstanding user record
 - [x] QR generator for library cards
 - [ ] barcode scanner from RWH to read isbn or whatever
 - [ ] auto send emails/texts to late books
 - [ ] make sure book can't be checked out if it's already checked out
-- [ ] make a parser for the .ris files... (easy) 
+- [x] make a parser for the .ris files... (easy) 
 - [ ] and potentially a bibtex generator?
 - [x] interface with optparse-applicative!

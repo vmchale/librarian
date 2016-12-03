@@ -11,6 +11,7 @@ import Data.Word (Word8)
 import qualified Data.Vector.Storable as V
 import Data.ByteString.Lazy (toStrict)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 import Data.List (replicate)
 import Data.Char (toLower)
 import Prelude as P
@@ -52,6 +53,9 @@ regenerate filepath action = do { regen <- doesFileExist filepath ; if regen the
 
 liftEither :: (Show b, Monad m) => (t -> m a) -> Either b t -> m a
 liftEither = either (fail . show)
+
+poopJSON :: (ToJSON a) => a -> FilePath -> IO ()
+poopJSON object filepath = BSL.writeFile filepath (encode object)
 
 createQRCode :: (ToJSON a) => a -> FilePath -> IO ()
 createQRCode object filepath = regenerate filepath make

@@ -13,21 +13,26 @@ import Control.Lens.Iso
 import Control.Lens.At
 import Data.Char (toLower)
 import Data.List (sortBy)
-import Control.Monad (liftM2, mapM)
+import Control.Monad (liftM2, mapM, join)
 import Types
 import QRCodes
 import Data.Foldable (fold)
 import System.Directory
+import Control.Monad.ListM
 
 showBooks :: IO ()
 showBooks = (fmap head) getPatrons >>= showObject
 
 mkLabel :: Book -> IO ()
-mkLabel boo = createQRCode boo ("db/labels/" ++ (map toLower) (map (\c -> if c==' ' then '-' else c) (take 140 (view title boo))) ++ ".png")
+mkLabel boo = fold [ createQRCode boo (name ++ ".png")
+                   , poopJSON boo (name ++ ".json")
+                   ]
+    where name = filter (not . ((flip elem) ":;&#")) $ "db/labels/" ++ (map toLower) (map (\c -> if c==' ' then '-' else c) (take 60 (view title boo)))
 
 mkCard :: Patron -> IO ()
 mkCard pat = do 
     createQRCode pat ("db/cards/" ++ (view email pat) ++ ".png")
+    poopJSON pat ("db/cards/" ++ (view email pat) ++ ".json")
     createSecureQRCode pat ("db/cards/" ++ (view email pat) ++ "-signed.png")
 
 updatePatron :: Patron -> IO ()
@@ -99,8 +104,16 @@ emailError (Just a) = a
 emailError Nothing = error "Email format not valid" --actually maybe just repeat or something? in optparse-applicative or gen. a dsl idk
 
 isDue :: Book -> IO Bool
-isDue = (\a -> return False)
---search the db idk
+isDue = ((liftM2 (>=)) getCurrentTime) . dueDate
+
+userDelinquencies :: Patron -> IO [Book]
+userDelinquencies = (flip (>>=)) (filterMP isDue) . return . findByPatron
+
+delinquentUsers :: IO [Patron]
+delinquentUsers = allDueBooks >>= sequence . (map patronByBook)
+
+allDueBooks :: IO [Book]
+allDueBooks = getBookDB >>= (filterMP isDue)
 
 sendReminders :: IO ()
 sendReminders = do
@@ -116,6 +129,12 @@ checkout pat boo = getCurrentTime >>= (\time -> return $ over (record) ((:) (boo
 patronByBook :: Book -> IO Patron
 patronByBook boo = (fmap head) $ fmap (filter (\p -> boo `elem` (map (view _1) (view record p)))) getPatrons
 
+renew :: Book -> IO Patron
+renew boo = do
+    pat <- patronByBook boo
+    let p' = return' pat boo
+    checkout p' boo
+
 return' :: Patron -> Book -> Patron
 return' pat boo = over (record) (filter ((/= boo) . (view _1))) pat
 
@@ -125,12 +144,12 @@ searchByAuthor aut = fmap (filter (\boo -> view (author) boo == aut)) getBookDB
 searchByTitle :: String -> IO [Book]
 searchByTitle tit = fmap (filter (\boo -> (==) (map toLower $ view (title) boo) (map toLower tit))) getBookDB
 
---sortByDueDate :: [Book] -> IO [Book]
---sortByDueDate boo = boo >>= ((\boo1 boo2 -> (liftM2 compare) (dueDate boo1) (dueDate boo2)) >>= sortBy)
---boo >>= (sortBy (\boo1 boo2 -> (liftM2 compare) <$> dueDate <*> boo1 <*> boo2))
+sortByDueDate :: [Book] -> IO [Book]
+sortByDueDate boo = sortByM (\boo1 boo2 -> (liftM2 compare) (dueDate boo1) (dueDate boo2)) boo
 
 dueDate :: Book -> IO UTCTime
-dueDate boo = fmap ((view _2 . head) . (filter (\i -> (==) boo (view (_1) i)))) bookPairs --addUTCTime does something stupid idk fix it
+dueDate boo = fmap ((addUTCTime t) . (view _2 . head) . (filter (\i -> (==) boo (view (_1) i)))) bookPairs --addUTCTime does something stupid idk fix it
+    where t = fromInteger ((*604800) $ (view checkoutLength boo))
 
 bookPairs :: IO [(Book, UTCTime)]
 bookPairs = fmap (concat . (map (view record))) getPatrons
@@ -140,9 +159,6 @@ getRecord path = do
     tmp <- getTemporaryDirectory
     let path'= (tmp ++ "/" ++ (reverse $ takeWhile (/= '/') $ reverse path))
     copyFile path path'
-    --tmpDir <- getTemporaryDirectory
-    --tmp <- openTempFile path (tmp ++ "/" ++ (reverse $ takeWhile (/= '/') $ reverse path))
-    --(view _2 tmp) >>= hGetContents
     fmap (map (stripJSON . decode')) (fmap BSL.lines (BSL.readFile path')) --possibly revisit to make lazy if that improves performance
 
 getBookDB :: IO [Book]

@@ -17,16 +17,9 @@ data Com = AddBook { title' :: String , author' :: String }
            | NewPatron { name' :: String, email' :: String }
            | Checkout
            | Return
+           | Renew
            | PrintCard { email' :: String }
 --with subcommands I could have lenses for my applicative parser combinators? wtf.
-
-exec' :: IO ()
-exec' = do
-    createBook $ newBook "In pursuit of pure reason" "Vanessa McHale"
-    newPatron $ createPatron "Vanesa McHale" "tmchale@wisc.edu"
-    (checkout (createPatron "The" "a@a.com") (newBook "In pursuit of pure reason" "Vanessa McHale")) >>= newPatron
-    showBooks
-    --updateQR
 
 exec :: IO ()
 exec = execParser opts >>= pick
@@ -56,6 +49,10 @@ pick (Program (NewPatron nam ema) True _ _) = do
     let pat = createPatron nam ema
     newPatron pat
     showObject pat
+pick (Program Renew True _ boof) = do
+    boo <- (fmap head) $ (getRecord boof :: IO [Book])
+    let p' = renew boo
+    p' >>= updatePatron
 pick (Program (NewPatron nam ema) False _ _) = do 
     let boo = newBook nam ema
     createBook boo
@@ -87,6 +84,9 @@ program = Program
                         <> metavar "EMAIL"
                         <> help "email of patron"))
                 (progDesc "Add user to db."))
+            <> command "renew" (info
+                (pure Renew)
+                (progDesc "Renew a record."))
             <> command "new-book" (info
                 (AddBook
                     <$> strOption

@@ -19,6 +19,7 @@ library
                      , LibraryDB
                      , Options
                      , Cards
+                     , Parser
   other-modules:       Types
   build-depends:       base >= 4.7 && < 5
                      , time
@@ -35,10 +36,11 @@ library
                      , jose-jwt
                      , directory
                      , process
-                     , pandoc
+                     --, pandoc
                      , shakespeare
                      , blaze-html
                      , MissingH
+                     , monadlist
   default-language:    Haskell2010
 
 executable library
@@ -64,6 +66,14 @@ executable qrpipe
   build-depends:       base
                      , librarian
                      , bytestring
+  default-language:    Haskell2010
+
+executable parse-ris
+  hs-source-dirs:      app
+  main-is:             Ris.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2
+  build-depends:       base
+                     , librarian
   default-language:    Haskell2010
 
 source-repository head
