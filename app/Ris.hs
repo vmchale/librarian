@@ -1,0 +1,3 @@
+import Parser
+
+main = exec
