@@ -33,7 +33,7 @@ exec = execParser opts >>= pick
 pick :: Program -> IO ()
 pick (Program (PrintCard ema) False _ _) = (fmap (head . filter (\a -> (==) (_email a) (ema)))) getPatrons >>= mkCard
 pick (Program Checkout True patf boof) = do
-    let pat = (fmap head) $ getRecord patf
+    let pat = ((fmap head) $ (getRecord patf)) >>= matchRecord
     let boo = (fmap head) $ getRecord boof
     p' <- checkout <$> pat <*> boo
     p' >>= updatePatron
@@ -42,7 +42,7 @@ pick (Program (AddBook tit aut) True _ _) = do
     createBook boo
     showObject boo
 pick (Program Return True _ boof) = do
-    let boo = (fmap head) $ getRecord boof
+    let boo = (fmap head) $ (getRecord boof)
     let p' = return' <$> (boo >>= patronByBook) <*> boo
     p' >>= updatePatron
 pick (Program (NewPatron nam ema) True _ _) = do 

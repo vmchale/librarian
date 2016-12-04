@@ -63,7 +63,7 @@ newBook tit aut = Book { _title           = tit
                        , _isbn            = Nothing
                        , _publisher       = Nothing
                        , _publicationYear = Nothing
-                       , _checkoutLength  = 7 } --7 days by default
+                       , _checkoutLength  = 21 } --21 days by default
 
 updateRecord :: (ToJSON a) => a -> FilePath -> IO ()
 updateRecord rec file = BSL.appendFile file toAppend where

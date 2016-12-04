@@ -15,3 +15,7 @@ to ensure the right folders are in place
 
 ##Usage
 To help you get started, there is a bash file called `examples` in the appropriate directory, which has many of the common commands you will issue. 
+
+You might also want to use
+```stack ghci```
+if you want more fine-grained control of things

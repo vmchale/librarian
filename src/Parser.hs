@@ -16,10 +16,12 @@ exec = do
 --tbh this would be a good place for a monadic parser?? yea. cuz like that's how aeson does it
 --although it needs backtracking to work with the publication year/city (centered around the colon)
 mkBook :: FilePath -> IO Book
-mkBook filepath = do
+mkBook filepath = do -- 
     boo <- ((liftA2 newBook) (title' filepath) (author' filepath))
     p <- publicationYear' filepath
-    return boo { _publicationYear = pure p }
+    let b' = boo { _publicationYear = pure p }
+    createBook b'
+    return b'
 
 author' :: FilePath -> IO String
 author' filepath = do

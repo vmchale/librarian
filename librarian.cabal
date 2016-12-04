@@ -1,6 +1,6 @@
 name:                librarian
 version:             0.1.0.0
-synopsis:            Initial project template from stack
+synopsis:            Manage a json record of a home lib rary. 
 description:         Please see README.md
 homepage:            https://github.com/vmchale/librarian#readme
 license:             BSD3
