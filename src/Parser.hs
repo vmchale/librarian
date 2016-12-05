@@ -25,15 +25,15 @@ mkBook filepath = do --
 
 author' :: FilePath -> IO String
 author' filepath = do
-    ls <- (fmap lines) $ readFile filepath
+    ls <- lines <$> readFile filepath
     return $ takeWhile (not . ((flip elem) "(")) $ (drop 6) $ (head $ filter (\l -> "AU  - " `isPrefixOf` l) ls)
 
 title' :: FilePath -> IO String
 title' filepath = do
-    ls <- (fmap lines) $ readFile filepath
+    ls <- lines <$> readFile filepath
     return $ (drop 6) $ (head $ filter (\l -> "T1  - " `isPrefixOf` l) ls)
 
 publicationYear' :: FilePath -> IO String
 publicationYear' filepath = do
-    ls <- (fmap lines) $ readFile filepath
-    return $ (take 4) . (filter isDigit) $ (drop 6) $ (head $ (filter (\l -> "PY  - " `isPrefixOf` l)) ls)
+    ls <- lines <$> readFile filepath
+    return $ (take 4) . (filter isDigit) $ (drop 6) $ (head $ filter (\l -> "PY  - " `isPrefixOf` l) ls)

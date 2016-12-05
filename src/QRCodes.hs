@@ -1,7 +1,11 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module QRCodes where
+module QRCodes (createSecureQRCode
+              , createQRCode
+              , byteStringToQR
+              , poopJSON
+              ) where
 
 import Data.Aeson
 import Data.QRCode
@@ -20,17 +24,16 @@ import Jose.Jws
 import System.Directory (doesFileExist)
 import Control.Lens.Tuple
 import Control.Lens (view)
-import Jose.Jwt (unJwt)
+import Jose.Jwt (unJwt, JwtError)
 import Jose.Jwa (JwsAlg (RS256))
 import Data.Either (either)
-import Jose.Jwt (JwtError)
-import Jose.Jws (rsaDecode)
 import Data.Bits ((.&.))
+import Control.Applicative ((<$>))
 
 checkSig tok = do
-    key <- fmap read $ readFile "key.hk"
+    key <- read <$> readFile "key.hk"
     let jws = rsaDecode key tok
-    return $ (fmap (view _2)) jws
+    return $ fmap (view _2) jws
 
 createSecureQRCode :: (ToJSON a) => a -> FilePath -> IO ()
 createSecureQRCode object filepath = regenerate filepath make
@@ -42,11 +45,11 @@ createSecureQRCode object filepath = regenerate filepath make
                         writeFile "key.hk" (show key)
                     else
                         return ()
-                    key' <- fmap read $ readFile "key.hk" :: IO (Cr.PublicKey, Cr.PrivateKey)
+                    key' <- read <$> readFile "key.hk" :: IO (Cr.PublicKey, Cr.PrivateKey)
                     signedToken <- rsaEncode RS256 (view _2 key') (toStrict $ encode object)
-                    let signed = fmap (unJwt) signedToken
+                    let signed = fmap unJwt signedToken
                     output <- liftEither id $ fmap (flip byteStringToQR filepath) signed
-                    putStrLn $ show output
+                    print output
 
 regenerate :: FilePath -> IO () -> IO ()
 regenerate filepath action = do { regen <- doesFileExist filepath ; if regen then putStrLn "already generated, skipping..." else action }
@@ -63,7 +66,7 @@ createQRCode object filepath = regenerate filepath make
 
 byteStringToQR :: BS.ByteString -> FilePath -> IO ()
 byteStringToQR input filepath = do
-    smallMatrix <- (fmap toMatrix) $ encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False
+    smallMatrix <- toMatrix <$> encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False
     let qrMatrix = fattenList 8 $ P.map (fattenList 8) smallMatrix
     writePng filepath (encodePng qrMatrix)
 
@@ -73,7 +76,7 @@ encodePng matrix = Image dim dim vector
           vector = V.map ((*255) . swapWord) $ V.fromList $ P.concat matrix
 
 fattenList :: Int -> [a] -> [a]
-fattenList i l = P.concat $ (P.foldr ((:) . (P.replicate i)) [] l)
+fattenList i l = P.concat $ P.foldr ((:) . (P.replicate i)) [] l
 
 swapWord :: Word8 -> Word8
 swapWord 1 = 0

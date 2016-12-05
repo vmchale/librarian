@@ -6,6 +6,7 @@ import LibraryDB
 import Types
 import qualified Data.ByteString.Lazy as BSL
 import Data.Aeson
+import Control.Lens (view)
 
 data Program = Program
     { com   :: Com --if left blank, stdin
@@ -31,10 +32,10 @@ exec = execParser opts >>= pick
             )
 
 pick :: Program -> IO ()
-pick (Program (PrintCard ema) False _ _) = (fmap (head . filter (\a -> (==) (_email a) (ema)))) getPatrons >>= mkCard
+pick (Program (PrintCard ema) False _ _) = (head . filter (\a -> (==) (view email a) ema)) <$> getPatrons >>= mkCard
 pick (Program Checkout True patf boof) = do
-    let pat = ((fmap head) $ (getRecord patf)) >>= matchRecord
-    let boo = (fmap head) $ getRecord boof
+    let pat = (head <$> getRecord patf) >>= matchRecord
+    let boo = head <$> getRecord boof
     p' <- checkout <$> pat <*> boo
     p' >>= updatePatron
 pick (Program (AddBook tit aut) True _ _) = do 
@@ -42,7 +43,7 @@ pick (Program (AddBook tit aut) True _ _) = do
     createBook boo
     showObject boo
 pick (Program Return True _ boof) = do
-    let boo = (fmap head) $ (getRecord boof)
+    let boo = head <$> getRecord boof
     let p' = return' <$> (boo >>= patronByBook) <*> boo
     p' >>= updatePatron
 pick (Program (NewPatron nam ema) True _ _) = do 
@@ -50,7 +51,7 @@ pick (Program (NewPatron nam ema) True _ _) = do
     newPatron pat
     showObject pat
 pick (Program Renew True _ boof) = do
-    boo <- (fmap head) $ (getRecord boof :: IO [Book])
+    boo <- head <$> (getRecord boof :: IO [Book])
     let p' = renew boo
     p' >>= updatePatron
 pick (Program (NewPatron nam ema) False _ _) = do 

@@ -16,7 +16,8 @@ import Control.Lens.Iso
 import Control.Lens.At
 import Data.Char (toLower)
 import Data.List (sortBy)
-import Control.Monad (liftM2, mapM, join)
+import Control.Monad (mapM, join)
+import Control.Applicative (liftA2, (<$>))
 import Types
 import QRCodes
 import Data.Foldable (fold)
@@ -26,24 +27,22 @@ import Network.Mail.SMTP
 import Network.Mail.Mime hiding (simpleMail)
 import qualified Data.Text as T 
 
-showBooks :: IO ()
-showBooks = (fmap head) getPatrons >>= showObject
-
 mkLabel :: Book -> IO ()
 mkLabel boo = fold [ createQRCode boo (name ++ ".png")
                    , poopJSON boo (name ++ ".json")
                    ]
-    where name = filter (not . ((flip elem) (":;&#" :: String))) $ "db/labels/" ++ (map toLower) (map (\c -> if c==' ' then '-' else c) (take 60 (view title boo)))
+    where name = filter (not . ((flip elem) (":;&#" :: String))) $ "db/labels/" ++ (map (toLower . (\c -> if c==' ' then '-' else c)) (take 60 (view title boo)))
 
 mkCard :: Patron -> IO ()
 mkCard pat = do 
-    createQRCode pat ("db/cards/" ++ (view email pat) ++ ".png")
-    poopJSON pat ("db/cards/" ++ (view email pat) ++ ".json")
-    createSecureQRCode pat ("db/cards/" ++ (view email pat) ++ "-signed.png")
+    createQRCode pat ("db/cards/" ++ pat^.email ++ ".png")
+    poopJSON pat ("db/cards/" ++ pat^.email ++ ".json")
+    createSecureQRCode pat ("db/cards/" ++ pat^.email ++ "-signed.png")
 
 updatePatron :: Patron -> IO ()
-updatePatron = (\p -> fold [ deletePatron p, 
-                             newPatron p ])
+updatePatron p = fold [ deletePatron p
+                     ,  newPatron p ]
+
 updateField :: a -> Lens' a b -> b -> a
 updateField obj lens new = set lens new obj
 
@@ -73,7 +72,7 @@ updateByCard :: Patron -> Book -> IO Patron
 updateByCard pat boo = (matchRecord pat) >>= ((flip checkout) boo)
 
 matchRecord :: Patron -> IO Patron
-matchRecord pat = fmap (head . (filter (\a -> (==) (view email pat) (view email a)))) getPatrons
+matchRecord pat = fmap (head . (filter (\a -> pat^.email == a^.email))) getPatrons
 
 createBook :: Book -> IO ()
 createBook = flip updateRecord "db/library.json"
@@ -85,7 +84,7 @@ replaceRecord list file = do
 
 deleteBook :: Book -> IO ()
 deleteBook boo = do
-    newDB <- fmap (filter ((/=) boo)) getBookDB
+    newDB <- filter (/=boo) <$> getBookDB
     replaceRecord newDB "db/library.json"
 
 deletePatron :: Patron -> IO ()
@@ -111,10 +110,10 @@ emailError (Just a) = a
 emailError Nothing = error "Email format not valid"
 
 isDue :: Book -> IO Bool
-isDue = ((liftM2 (>=)) getCurrentTime) . dueDate
+isDue = ((liftA2 (>=)) getCurrentTime) . dueDate
 
 userDelinquencies :: Patron -> IO [Book]
-userDelinquencies = (flip (>>=)) (filterMP isDue) . return . findByPatron
+userDelinquencies = (=<<) (filterMP isDue) . return . findByPatron
 
 delinquentUsers :: IO [Patron]
 delinquentUsers = allDueBooks >>= sequence . (map patronByBook)
@@ -125,7 +124,7 @@ allDueBooks = getBookDB >>= (filterMP isDue)
 sendReminders :: IO ()
 sendReminders = do
     delinquentUsers >>= print --for debug only
-    fmap (map (sender . emailGen)) (delinquentUsers)
+    map (sender . emailGen) <$> delinquentUsers
     putStrLn "...emails sent successfully"
 
 sender :: Mail -> IO ()
@@ -142,7 +141,7 @@ checkout :: Patron -> Book -> IO Patron
 checkout pat boo = getCurrentTime >>= (\time -> return $ over (record) ((:) (boo, time)) pat)
 
 patronByBook :: Book -> IO Patron
-patronByBook boo = (fmap head) $ fmap (filter (\p -> boo `elem` (map (view _1) (view record p)))) getPatrons
+patronByBook boo = head . (filter (\p -> boo `elem` (map (view _1) (p^.record)))) <$> getPatrons
 
 renew :: Book -> IO Patron
 renew boo = do
@@ -160,7 +159,7 @@ searchByTitle :: String -> IO [Book]
 searchByTitle tit = fmap (filter (\boo -> (==) (map toLower $ view (title) boo) (map toLower tit))) getBookDB
 
 sortByDueDate :: [Book] -> IO [Book]
-sortByDueDate boo = sortByM (\boo1 boo2 -> (liftM2 compare) (dueDate boo1) (dueDate boo2)) boo
+sortByDueDate = sortByM (\boo1 boo2 -> (liftA2 compare) (dueDate boo1) (dueDate boo2))
 
 dueDate :: Book -> IO UTCTime
 dueDate boo = fmap ((addUTCTime t) . (view _2 . head) . (filter (\i -> (==) boo (view (_1) i)))) bookPairs
@@ -174,7 +173,7 @@ getRecord path = do
     tmp <- getTemporaryDirectory
     let path'= (tmp ++ "/" ++ (reverse $ takeWhile (/= '/') $ reverse path))
     copyFile path path'
-    fmap (map (stripJSON . decode')) (fmap BSL.lines (BSL.readFile path'))
+    fmap ((map (stripJSON . decode')) . BSL.lines) (BSL.readFile path')
 
 getBookDB :: IO [Book]
 getBookDB = getRecord "db/library.json"
