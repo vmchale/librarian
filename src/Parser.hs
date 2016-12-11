@@ -1,4 +1,4 @@
-module Parser ( exec
+module Parser ( parseBib
               ) where
 
 import System.Directory
@@ -8,8 +8,8 @@ import Data.Char (isDigit)
 import Data.List (isPrefixOf)
 import Control.Applicative (liftA2)
 
-exec :: IO ()
-exec = do
+parseBib :: IO ()
+parseBib = do
     contents <- listDirectory "ris-files/"
     sequence_ $ map (((flip (>>=)) mkLabel) . mkBook . ((++) "ris-files/")) contents
 

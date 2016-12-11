@@ -49,8 +49,8 @@ updateField obj lens new = set lens new obj
 updateQR :: IO ()
 updateQR = do
     p <- getPatrons
-    b <- getBookDB
-    sequence_ $ map mkLabel b
+    --b <- getBookDB
+    --sequence_ $ map mkLabel b
     sequence_ $ map mkCard p
 
 showObject :: (ToJSON a) => a -> IO ()

@@ -24,7 +24,7 @@ instance FromJSON Book
 
 data Patron = Patron { _name   :: String
                      , _record :: [(Book, UTCTime)]
-                     , _email  :: String
+                     , _email  :: String --add birth date idk?
                      } deriving (Show, Generic, Eq)
 makeLenses ''Patron
 

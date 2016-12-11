@@ -15,11 +15,11 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     QRCodes
-                     , LibraryDB
+  exposed-modules:     LibraryDB
                      , Options
                      , Cards
                      , Parser
+                     , QRCodes
                      --, QRRepa
   other-modules:       Types
   build-depends:       base >= 4.7 && < 5
@@ -45,36 +45,12 @@ library
                      , smtp-mail
                      , mime-mail
                      , text
+                     , qr-imager
   default-language:    Haskell2010
 
 executable library
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2
-  build-depends:       base
-                     , librarian
-  default-language:    Haskell2010
-
-executable mkCards
-  hs-source-dirs:      app
-  main-is:             Make.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2
-  build-depends:       base
-                     , librarian
-  default-language:    Haskell2010
-
-executable qrpipe
-  hs-source-dirs:      app
-  main-is:             QR.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2
-  build-depends:       base
-                     , librarian
-                     , bytestring
-  default-language:    Haskell2010
-
-executable parse-ris
-  hs-source-dirs:      app
-  main-is:             Ris.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:       base
                      , librarian

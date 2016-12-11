@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes     #-}
 
-module Cards (exec
+module Cards (makeCards
              ) where
 
 import Text.Hamlet
@@ -17,9 +17,11 @@ import Data.List.Utils (replace)
 
 render = undefined
 
-exec :: IO ()
-exec = fold [ make
-            , libRec ]
+makeCards :: IO ()
+makeCards = fold [ updateQR
+                 , putStrLn "QR codes generated successfully."
+                 , make
+                 , libRec ]
 
 defHtml nam ema =
     $(hamletFile "hamlet/default.hamlet")

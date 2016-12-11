@@ -5,15 +5,15 @@ rm db/cards/yyu*
 mkdir -p db/labels
 mkdir db/cards
 #library new-book --title "Theoretical Physics" --author "Georg Joos" -j --book /dev/null -u /dev/null
-library add-user -u "Vanessa McHale" -e "tmchale@wisc.edu" --book /dev/null -u /dev/null -j
-library add-user -u "Margaret Babe" -e "mbabe@wisc.edu" --book /dev/null -u /dev/null -j
-library add-user -u "Sara Vega" -e "sjvega@wisc.edu" -u /dev/null --book /dev/null -j
-library print-card -e "tmchale@wisc.edu" -u /dev/null --book /dev/null
-library print-card -e "mbabe@wisc.edu" -u /dev/null --book /dev/null
-library print-card -e "sjvega@wisc.edu" -u /dev/null --book /dev/null
-parse-ris
+library add-user -u "Vanessa McHale" -e "tmchale@wisc.edu" -j
+library add-user -u "Margaret Babe" -e "mbabe@wisc.edu" -j
+library add-user -u "Sara Vega" -e "sjvega@wisc.edu" -j
+library print-card -e "tmchale@wisc.edu"
+library print-card -e "mbabe@wisc.edu"
+library print-card -e "sjvega@wisc.edu"
+library parse-ris
 library checkout -u "db/cards/tmchale@wisc.edu.json" --book "db/labels/an-introduction-to-symplectic-geometry.json" -j
 library checkout -u "db/cards/sjvega@wisc.edu.json" --book "db/labels/the-master-and-margarita.json" -j
 library checkout -u "db/cards/sjvega@wisc.edu.json" --book "db/labels/a-hero-of-our-time.json" -j
 library checkout -u "db/cards/sjvega@wisc.edu.json" --book "db/labels/the-metamorphosis-and-other-stories.json" -j
-mkCards && gnome-open hamlet/cards/mbabe.html ; gnome-open hamlet/cards/sjvega.html
+library mk-cards && gnome-open hamlet/cards/mbabe.html ; gnome-open hamlet/cards/sjvega.html
