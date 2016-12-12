@@ -1,3 +1,4 @@
+-- | Low-level functions LibraryDB uses
 module Internal.LibInt where
 
 import Data.Time.Clock
@@ -12,9 +13,11 @@ import Internal.Types
 import Data.Foldable (fold)
 import System.Process
 
+-- | convert an integer number of days to DiffTime for use with Data.Time etc.
 daysToDiffTime :: Integer -> DiffTime
 daysToDiffTime = secondsToDiffTime . (*86400)
 
+-- | Pretty-print an object with a ToJSON instance
 showObject :: (ToJSON a) => a -> IO ()
 showObject = BSL.putStrLn . encodePretty
 
@@ -22,10 +25,12 @@ stripJSON :: Maybe a -> a
 stripJSON (Just a) = a
 stripJSON Nothing  = error "Failed to parse database."
 
+-- | Convert a Maybe EmailAddress to an EmailAddress
 emailError :: Maybe EmailAddress -> EmailAddress
 emailError (Just a) = a
 emailError Nothing = error "Email format not valid"
 
+-- | Get a list of objects of the FromJSON class from a file with one object per line
 getRecord :: (FromJSON a) => FilePath -> IO [a]
 getRecord path = do
     tmp <- getTemporaryDirectory
@@ -44,6 +49,7 @@ replaceRecord list file = do
     removeFile file
     fold $ map (flip updateRecord file) list
 
+-- | Send mail from the smtp server indicated in the file `.pw`
 sender :: Mail -> IO ()
 sender mail = do
     pwFile <- readFile ".pw"

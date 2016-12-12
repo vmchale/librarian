@@ -1,3 +1,5 @@
+-- | Uses an applicative option parser to pull up functions from LibraryDB
+-- | This is what is executed by the executable `library`
 module Exec.Options ( exec
                     ) where
 
@@ -45,6 +47,7 @@ exec = fold [ fold $ map ((createDirectoryIfMissing True) . ((++) "db/")) ["labe
             <> header "library - a home library manager"
             )
 
+-- | Converts a 'Program' value to an IO action
 pick :: Program -> IO ()
 pick (Program i j True k l) = do
     join (fold <$> install)
@@ -79,6 +82,7 @@ pick (Program Renew True _ _ (Just boof)) = do
     let p' = renew boo
     p' >>= updatePatron
 
+-- | Parser for the 'Program' data type
 program :: Parser Program
 program = Program
     <$> subparser

@@ -1,0 +1,4 @@
+#!/bin/bash
+mkdir dist doc
+ln -s ../.stack-work/dist/x86_64-linux/Cabal-1.24.0.0/librarian-0.1.0.0.tar.gz dist/librarian-0.1.0.0.tar.gz
+ln -s ../.stack-work/install/x86_64-linux/lts-7.13/8.0.1/doc/librarian-0.1.0.0/index.html doc/index.html

@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes     #-}
 
+-- | Module for generating library cards in html
 module Generators.Cards (makeCards
                         ) where
 

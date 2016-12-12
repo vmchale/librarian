@@ -3,18 +3,17 @@ First, you'll need to get the C library `libqrencode` from [here](https://github
 
 Then type `stack install` in the appropriate library.
 
-To make sure bash completions run correctly, run `bash/mkCompletions` as well. You might also have to do
-
-```
-mkdir -p db/labels
-mkdir db/cards
-mkdir hamlet/cards
-```
-
-to ensure the right folders are in place
+To make sure bash completions run correctly, run any command with the `--install` flag. 
 
 ##Config
-First, find the file called `.pw` and edit it appropriately so that you can send reminder emails to delinquent patrons.
+First, find the file called `.pw` and edit it appropriately so that you can send reminder emails to delinquent patrons. It is formatted like so:
+
+```
+server: smtp.domain.org
+port: 465
+email: name@doman.org
+passord: *******
+```
 
 ##Usage
 To help you get started, there is a bash file called `examples` in the appropriate directory, which has many of the common commands you will issue. 

@@ -1,6 +1,8 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts #-}
 
+-- | Module exports some functions to generate QR codes from objects that are part of the ToJSON class
+-- | as well as functions that work on byteStrings.
 module Generators.QRCodes (createSecureQRCode
                           , createQRCode
                           , byteStringToQR
@@ -30,11 +32,13 @@ import Data.Either (either)
 import Data.Bits ((.&.))
 import Control.Applicative ((<$>))
 
+-- | check signature on token
 checkSig tok = do
     key <- read <$> readFile ".key.hk"
     let jws = rsaDecode key tok
     return $ fmap (view _2) jws
 
+-- | create signed QR code from an object that is a member of the ToJSON class
 createSecureQRCode :: (ToJSON a) => a -> FilePath -> IO ()
 createSecureQRCode object filepath = regenerate filepath make
     where make = do
@@ -51,19 +55,24 @@ createSecureQRCode object filepath = regenerate filepath make
                     output <- liftEither id $ fmap (flip byteStringToQR filepath) signed
                     print output
 
+-- | only write to filepath if the file does not currently exist
 regenerate :: FilePath -> IO () -> IO ()
 regenerate filepath action = do { regen <- doesFileExist filepath ; if regen then putStrLn "already generated, skipping..." else action }
 
+-- | lift an Either IO to an IO
 liftEither :: (Show b, Monad m) => (t -> m a) -> Either b t -> m a
 liftEither = either (fail . show)
 
+-- | put an object that is a member of the ToJSON class in a file
 poopJSON :: (ToJSON a) => a -> FilePath -> IO ()
 poopJSON object filepath = BSL.writeFile filepath (encode object)
 
+-- | Create a QR Code from an object that is a member of the ToJSON class
 createQRCode :: (ToJSON a) => a -> FilePath -> IO ()
 createQRCode object filepath = regenerate filepath make
     where make = let input = toStrict $ encode object in byteStringToQR input filepath
 
+-- | Create a QR code from a ByteString
 byteStringToQR :: BS.ByteString -> FilePath -> IO ()
 byteStringToQR input filepath = do
     smallMatrix <- toMatrix <$> encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False

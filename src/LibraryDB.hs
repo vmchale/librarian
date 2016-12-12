@@ -1,6 +1,8 @@
 {-# LANGUAGE RankNTypes        #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+-- | Module containing the basic building blocks and functions to manage a home library.
+-- | You can also manage the library using the provided `library` executable.
 module LibraryDB ( mkLabel
                  , mkCard
                  , updatePatron
@@ -25,6 +27,7 @@ module LibraryDB ( mkLabel
                  , dueDate
                  , getBookDB
                  , getPatrons
+                 , module Internal.Types
                  ) where
 
 import Data.Aeson

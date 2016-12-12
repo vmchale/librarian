@@ -1,3 +1,4 @@
+-- | Module with functions to parse .ris files
 module Parser ( parseBib
               ) where
 
@@ -8,14 +9,15 @@ import Data.Char (isDigit)
 import Data.List (isPrefixOf)
 import Control.Applicative (liftA2)
 
+-- | parse a directory of .ris files and add them to the json-poopDB
 parseBib :: FilePath -> IO ()
 parseBib dir = do
     contents <- filter ((=="sir.") . (take 4) . reverse) <$> listDirectory dir
     putStrLn "parsing bib files..."
     sequence_ $ map (((flip (>>=)) mkLabel) . mkBook . ((++) "db/bib/")) contents
 
---tbh this would be a good place for a monadic parser?? yea. cuz like that's how aeson does it
---although it needs backtracking to work with the publication year/city (centered around the colon)
+-- | make a book from a .ris file
+-- | This should use actual parsers in the future so it doesn't read the file 4 times for no reason
 mkBook :: FilePath -> IO Book
 mkBook filepath = do
     boo <- ((liftA2 newBook) (title' filepath) (author' filepath))
@@ -24,11 +26,13 @@ mkBook filepath = do
     createBook b'
     return b'
 
+-- | get the author from a .ris file
 author' :: FilePath -> IO String
 author' filepath = do
     ls <- lines <$> readFile filepath
     return $ takeWhile (not . ((flip elem) "(")) $ (drop 6) $ (head $ filter (\l -> "AU  - " `isPrefixOf` l) ls)
 
+-- | get the title from a .ris file
 title' :: FilePath -> IO String
 title' filepath = do
     ls <- lines <$> readFile filepath
