@@ -24,7 +24,8 @@ module LibraryDB ( mkLabel
                  , sortByDueDate
                  , dueDate
                  , getBookDB
-                 , getPatrons ) where
+                 , getPatrons
+                 ) where
 
 import Data.Aeson
 import Data.Time.Clock
@@ -50,7 +51,7 @@ import Network.Mail.SMTP
 import Network.Mail.Mime hiding (simpleMail)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
-import Internal.IrritatingFunctions
+import Internal.LibInt
 
 -- | make a JSON record and QR code label for a given book
 mkLabel :: Book -> IO ()

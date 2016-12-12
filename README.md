@@ -13,6 +13,9 @@ mkdir hamlet/cards
 
 to ensure the right folders are in place
 
+##Config
+First, find the file called `.pw` and edit it appropriately
+
 ##Usage
 To help you get started, there is a bash file called `examples` in the appropriate directory, which has many of the common commands you will issue. 
 
