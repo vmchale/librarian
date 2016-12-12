@@ -25,28 +25,28 @@ import System.Directory (doesFileExist)
 import Control.Lens.Tuple
 import Control.Lens (view)
 import Jose.Jwt (unJwt, JwtError)
-import Jose.Jwa (JwsAlg (RS256))
+import Jose.Jwa (JwsAlg (RS512))
 import Data.Either (either)
 import Data.Bits ((.&.))
 import Control.Applicative ((<$>))
 
 checkSig tok = do
-    key <- read <$> readFile "key.hk"
+    key <- read <$> readFile ".key.hk"
     let jws = rsaDecode key tok
     return $ fmap (view _2) jws
 
 createSecureQRCode :: (ToJSON a) => a -> FilePath -> IO ()
 createSecureQRCode object filepath = regenerate filepath make
     where make = do
-                    switch <- doesFileExist "key.hk"
+                    switch <- doesFileExist ".key.hk"
                     if not switch then do
                         putStrLn "generating key..."
-                        key <- Cr.generate 256 0x10001
-                        writeFile "key.hk" (show key)
+                        key <- Cr.generate 512 0x10001
+                        writeFile ".key.hk" (show key)
                     else
                         return ()
-                    key' <- read <$> readFile "key.hk" :: IO (Cr.PublicKey, Cr.PrivateKey)
-                    signedToken <- rsaEncode RS256 (view _2 key') (toStrict $ encode object)
+                    key' <- read <$> readFile ".key.hk" :: IO (Cr.PublicKey, Cr.PrivateKey)
+                    signedToken <- rsaEncode RS512 (view _2 key') (toStrict $ encode object)
                     let signed = fmap unJwt signedToken
                     output <- liftEither id $ fmap (flip byteStringToQR filepath) signed
                     print output

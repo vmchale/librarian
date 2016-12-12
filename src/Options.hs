@@ -9,6 +9,8 @@ import Data.Aeson
 import Control.Lens (view)
 import Cards (makeCards)
 import Parser (parseBib)
+import System.Directory
+import Data.Foldable (fold)
 
 data Program = Program
     { com   :: Com --if left blank, stdin
@@ -16,25 +18,21 @@ data Program = Program
     , card  :: Maybe FilePath --use json, else .png
     , book' :: Maybe FilePath }
 
---implement this:
---that way we can ask for name/email/etc. from the command line
--- optional $ strOption
---   ( long "output"
---   <> metavar "DIRECTORY" )
 --possibly include switch to generate completion scripts!
 
 data Com = AddBook { title' :: String , author' :: String }
            | NewPatron { name' :: String, email' :: String }
            | Checkout
            | Return
-           | BibImport
+           | BibImport { dir :: Maybe FilePath }
            | Renew
            | UpdateAll
            | PrintCard { email' :: String }
 --with subcommands I could have lenses for my applicative parser combinators? wtheck.
 
 exec :: IO ()
-exec = execParser opts >>= pick
+exec = fold [ fold $ map ((createDirectoryIfMissing True) . ((++) "db/")) ["labels" , "cards" ]
+            , execParser opts >>= pick ]
     where
         opts = info (helper <*> program)
             (fullDesc
@@ -49,8 +47,9 @@ pick (Program Checkout True (Just patf) (Just boof)) = do
     let boo = head <$> getRecord boof
     p' <- checkout <$> pat <*> boo
     p' >>= updatePatron
-pick (Program (BibImport) _ _ _) = parseBib
-pick (Program (UpdateAll) _ _ _) = makeCards
+pick (Program (BibImport (Just dir)) _ _ _) = parseBib dir
+pick (Program (BibImport Nothing) _ _ _) = parseBib "ris-files/"
+pick (Program UpdateAll _ _ _) = makeCards
 pick (Program (AddBook tit aut) True _ _) = do 
     let boo = newBook tit aut
     createBook boo
@@ -78,7 +77,13 @@ program = Program
                 (progDesc "Check out a book."))
             <> command "return" (info (pure Return)
                 (progDesc "Return out a book."))
-            <> command "parse-ris" (info (pure BibImport)
+            <> command "parse-ris" (info 
+                (BibImport
+                    <$> (optional $ strOption
+                        (short 'd'
+                        <> long "dir"
+                        <> metavar "DIRECTORY"
+                        <> help "Directory to search for bib files")))
                 (progDesc "Import .ris files to the book databse"))
             <> command "print-card" (info 
                 (PrintCard 

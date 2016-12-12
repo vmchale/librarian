@@ -8,10 +8,11 @@ import Data.Char (isDigit)
 import Data.List (isPrefixOf)
 import Control.Applicative (liftA2)
 
-parseBib :: IO ()
-parseBib = do
-    contents <- listDirectory "ris-files/"
-    sequence_ $ map (((flip (>>=)) mkLabel) . mkBook . ((++) "ris-files/")) contents
+parseBib :: FilePath -> IO ()
+parseBib dir = do
+    contents <- filter ((=="sir.") . (take 4) . reverse) <$> listDirectory dir
+    putStrLn "parsing bib files..."
+    sequence_ $ map (((flip (>>=)) mkLabel) . mkBook . ((++) dir)) contents
 
 --tbh this would be a good place for a monadic parser?? yea. cuz like that's how aeson does it
 --although it needs backtracking to work with the publication year/city (centered around the colon)

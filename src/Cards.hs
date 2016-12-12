@@ -15,8 +15,10 @@ import Control.Lens
 import LibraryDB
 import Data.List.Utils (replace)
 
+-- | dummy render function
 render = undefined
 
+-- | Generate QR codes for books and library cards for all patrons
 makeCards :: IO ()
 makeCards = fold [ updateQR
                  , putStrLn "QR codes generated successfully."
