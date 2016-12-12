@@ -2,7 +2,7 @@ module Parser ( parseBib
               ) where
 
 import System.Directory
-import Types
+import Internal.Types
 import LibraryDB
 import Data.Char (isDigit)
 import Data.List (isPrefixOf)
@@ -12,12 +12,12 @@ parseBib :: FilePath -> IO ()
 parseBib dir = do
     contents <- filter ((=="sir.") . (take 4) . reverse) <$> listDirectory dir
     putStrLn "parsing bib files..."
-    sequence_ $ map (((flip (>>=)) mkLabel) . mkBook . ((++) dir)) contents
+    sequence_ $ map (((flip (>>=)) mkLabel) . mkBook . ((++) "db/")) contents
 
 --tbh this would be a good place for a monadic parser?? yea. cuz like that's how aeson does it
 --although it needs backtracking to work with the publication year/city (centered around the colon)
 mkBook :: FilePath -> IO Book
-mkBook filepath = do -- 
+mkBook filepath = do
     boo <- ((liftA2 newBook) (title' filepath) (author' filepath))
     p <- publicationYear' filepath
     let b' = boo { _publicationYear = pure p }

@@ -1,6 +1,6 @@
 name:                librarian
 version:             0.1.0.0
-synopsis:            Manage a json record of a home lib rary. 
+synopsis:            Manage a json record of a home library. 
 description:         Please see README.md
 homepage:            https://github.com/vmchale/librarian#readme
 license:             BSD3
@@ -16,11 +16,13 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     LibraryDB
-                     , Options
-                     , Cards
+                     , Exec.Options
+                     , Search.Finders
+  other-modules:       Internal.Types
+                     , Internal.IrritatingFunctions
+                     , Generators.Cards
                      , Parser
-                     , QRCodes
-  other-modules:       Types
+                     , Generators.QRCodes
   build-depends:       base >= 4.7 && < 5
                      , time
                      , aeson
@@ -36,7 +38,6 @@ library
                      , jose-jwt
                      , directory
                      , process
-                     --, pandoc
                      , shakespeare
                      , blaze-html
                      , MissingH

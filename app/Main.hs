@@ -1,6 +1,6 @@
 module Main where
 
-import Options
+import Exec.Options
 
 main :: IO ()
 main = exec
