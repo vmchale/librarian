@@ -62,6 +62,9 @@ pick (Program Checkout True _ (Just patf) (Just boof)) = do
 pick (Program (BibImport (Just dir)) _ _ _ _) = parseBib dir
 pick (Program (BibImport Nothing) _ _ _ _) = parseBib "db/bib/"
 pick (Program UpdateAll _ _ _ _) = makeCards
+pick (Program (AddBook tit aut) False _ _ _) = do 
+    let boo = newBook tit aut
+    createBook boo
 pick (Program (AddBook tit aut) True _ _ _) = do 
     let boo = newBook tit aut
     createBook boo
