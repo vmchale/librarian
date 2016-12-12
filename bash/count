@@ -1,0 +1,1 @@
+wc -l test/*.hs hamlet/*.hamlet src/* src/*/* app/* bash/* librarian.cabal stack.yaml Setup.hs
