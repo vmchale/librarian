@@ -21,6 +21,7 @@ library
   other-modules:       Internal.Types
                      , Generators.Cards
                      , Internal.LibInt
+                     , Internal.Reader
                      , Parser
                      , Generators.QRCodes
   build-depends:       base >= 4.7 && < 5

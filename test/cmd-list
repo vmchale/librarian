@@ -10,4 +10,4 @@ library checkout -u "db/cards/tmchale@wisc.edu.json" --book "db/labels/an-introd
 library checkout -u "db/cards/sjvega@wisc.edu.json" --book "db/labels/the-master-and-margarita.json" -j
 library checkout -u "db/cards/sjvega@wisc.edu.json" --book "db/labels/a-hero-of-our-time.json" -j
 library checkout -u "db/cards/sjvega@wisc.edu.json" --book "db/labels/the-metamorphosis-and-other-stories.json" -j
-library qrgen && gnome-open hamlet/cards/mbabe.html && gnome-open hamlet/cards/sjvega.html
+library qrgen --install && gnome-open hamlet/cards/mbabe.html && gnome-open hamlet/cards/sjvega.html
