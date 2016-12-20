@@ -3,9 +3,8 @@
 
 -- | Module exports some functions to generate QR codes from objects that are part of the ToJSON class
 -- | as well as functions that work on byteStrings.
-module Generators.QRCodes (createSecureQRCode
-                          , createQRCode
-                          , byteStringToQR
+module Generators.QRCodes ( regenSecureQRCode
+                          , regenQRCode
                           , poopJSON
                           ) where
 
@@ -31,6 +30,7 @@ import Jose.Jwa (JwsAlg (RS512))
 import Data.Either (either)
 import Data.Bits ((.&.))
 import Control.Applicative ((<$>))
+import Data.QRCodes
 
 -- | check signature on token
 checkSig tok = do
@@ -39,54 +39,17 @@ checkSig tok = do
     return $ fmap (view _2) jws
 
 -- | create signed QR code from an object that is a member of the ToJSON class
-createSecureQRCode :: (ToJSON a) => a -> FilePath -> IO ()
-createSecureQRCode object filepath = regenerate filepath make
-    where make = do
-                    switch <- doesFileExist ".key.hk"
-                    if not switch then do
-                        putStrLn "generating key..."
-                        key <- Cr.generate 512 0x10001
-                        writeFile ".key.hk" (show key)
-                    else
-                        return ()
-                    key' <- read <$> readFile ".key.hk" :: IO (Cr.PublicKey, Cr.PrivateKey)
-                    signedToken <- rsaEncode RS512 (view _2 key') (toStrict $ encode object)
-                    let signed = fmap unJwt signedToken
-                    output <- liftEither id $ fmap (flip byteStringToQR filepath) signed
-                    print output
+regenSecureQRCode :: (ToJSON a) => a -> FilePath -> IO ()
+regenSecureQRCode object filepath = regenerate filepath (createSecureQRCode object filepath)
 
 -- | only write to filepath if the file does not currently exist
 regenerate :: FilePath -> IO () -> IO ()
 regenerate filepath action = do { regen <- doesFileExist filepath ; if regen then putStrLn "already generated, skipping..." else action }
-
--- | lift an Either IO to an IO
-liftEither :: (Show b, Monad m) => (t -> m a) -> Either b t -> m a
-liftEither = either (fail . show)
 
 -- | put an object that is a member of the ToJSON class in a file
 poopJSON :: (ToJSON a) => a -> FilePath -> IO ()
 poopJSON object filepath = BSL.writeFile filepath (encode object)
 
 -- | Create a QR Code from an object that is a member of the ToJSON class
-createQRCode :: (ToJSON a) => a -> FilePath -> IO ()
-createQRCode object filepath = regenerate filepath make
-    where make = let input = toStrict $ encode object in byteStringToQR input filepath
-
--- | Create a QR code from a ByteString
-byteStringToQR :: BS.ByteString -> FilePath -> IO ()
-byteStringToQR input filepath = do
-    smallMatrix <- toMatrix <$> encodeByteString input Nothing QR_ECLEVEL_H QR_MODE_EIGHT False
-    let qrMatrix = fattenList 8 $ P.map (fattenList 8) smallMatrix
-    writePng filepath (encodePng qrMatrix)
-
-encodePng :: [[Word8]] -> T.Image Word8
-encodePng matrix = Image dim dim vector
-    where dim    = P.length matrix
-          vector = V.map ((*255) . swapWord) $ V.fromList $ P.concat matrix
-
-fattenList :: Int -> [a] -> [a]
-fattenList i l = P.concat $ P.foldr ((:) . (P.replicate i)) [] l
-
-swapWord :: Word8 -> Word8
-swapWord 1 = 0
-swapWord 0 = 1
+regenQRCode :: (ToJSON a) => a -> FilePath -> IO ()
+regenQRCode object filepath = regenerate filepath (createSecureQRCode object filepath)

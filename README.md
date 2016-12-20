@@ -19,7 +19,7 @@ passord: *******
 To help you get started, there is a bash file called `examples` in the appropriate directory, which has many of the common commands you will issue. 
 
 ###Example
-To add a user and print/view their library card:
+To add a user record, a book record, and print/view the user's library card:
 
 ```
 vanessa@laptop $ mkdir -p hamlet/cards
@@ -48,7 +48,7 @@ already generated, skipping...
 vanessa@laptop $ gnome-open hamlet/cards/tmchale.html
 ```
 
-###More depth
+###Going deeper
 You might also want to use
 ```stack ghci```
 if you want more fine-grained control of things

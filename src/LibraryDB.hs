@@ -58,7 +58,7 @@ import Internal.LibInt
 
 -- | make a JSON record and QR code label for a given book
 mkLabel :: Book -> IO ()
-mkLabel boo = fold [ createQRCode boo (name ++ ".png")
+mkLabel boo = fold [ regenQRCode boo (name ++ ".png")
                    , poopJSON boo (name ++ ".json")
                    ]
     where name = filter (not . ((flip elem) (":;&#" :: String))) $ "db/labels/" ++ (map (toLower . (\c -> if c==' ' then '-' else c)) (take 60 (view title boo)))
@@ -66,9 +66,9 @@ mkLabel boo = fold [ createQRCode boo (name ++ ".png")
 -- | make a JSON record, QR code, and signed QR Code for a given user
 mkCard :: Patron -> IO ()
 mkCard pat = do 
-    createQRCode pat ("db/cards/" ++ pat^.email ++ ".png")
+    regenQRCode pat ("db/cards/" ++ pat^.email ++ ".png")
     poopJSON pat ("db/cards/" ++ pat^.email ++ ".json")
-    createSecureQRCode pat ("db/cards/" ++ pat^.email ++ "-signed.png")
+    regenSecureQRCode pat ("db/cards/" ++ pat^.email ++ "-signed.png")
 
 -- | update a patron in the database
 updatePatron :: Patron -> IO ()
@@ -157,7 +157,7 @@ sendReminders = do
 emailGen :: Patron -> IO Mail
 emailGen pat = do
     del <- userDelinquencies pat
-    let msg = "Our records indicate you have overdue books, viz.\n" `TL.append` (fold $ map (TL.pack . show . (view title)) del) --make it actually useful
+    let msg = "Our records indicate you have overdue books, viz.\n" `TL.append` (fold $ map (TL.pack . show . (view title)) del)
     return $ simpleMail (Address Nothing "library@vmchale.com") ([Address (Just (T.pack $ view name pat)) (T.pack $ view email pat)]) [] [] "Overdue Books" [(plainTextPart msg)]
 
 -- | Given a patron, find all books they have out
@@ -187,7 +187,7 @@ return' pat boo = over (record) (filter ((/= boo) . (view _1))) pat
 sortByDueDate :: [Book] -> IO [Book]
 sortByDueDate = sortByM (\boo1 boo2 -> (liftA2 compare) (dueDate boo1) (dueDate boo2))
 
--- | Given a book, returns it's due date (after looking it up in the DB)
+-- | Given a book, returns its due date (after looking it up in the DB)
 dueDate :: Book -> IO UTCTime
 dueDate boo = fmap ((addUTCTime t) . (view _2 . head) . (filter (\i -> (==) boo (view (_1) i)))) bookPairs
     where t = fromInteger ((*604800) (view checkoutLength boo))

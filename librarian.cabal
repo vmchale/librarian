@@ -60,6 +60,7 @@ executable library
 test-suite test-lib
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
+  other-modules:       Internal
   main-is:             Carder.hs
   build-depends:       base
                      , librarian
