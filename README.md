@@ -1,5 +1,5 @@
 ##Install
-First, you'll need to get the C library `libqrencode` from [here](https://github.com/fukuchi/libqrencode)
+First, you'll need to get the C library `libqrencode` from [here](https://github.com/fukuchi/libqrencode) and the C library `Zbar` from [here](https://github.com/ZBar/ZBar), or get them from your distro.
 
 Then type `stack install` in the appropriate library.
 

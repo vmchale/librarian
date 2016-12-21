@@ -6,6 +6,8 @@
 - [x] (and prune when expired)
 - [x] encryption idk
 - [ ] verify qr codes (not just bytestrings)
+- [ ] use zbarimg with some easy shell stuff
+- [ ] consider using webcam interface
 - [ ] maybe use a real database?
 - [x] search by user
 - [x] search by due date

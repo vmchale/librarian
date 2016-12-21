@@ -5,5 +5,5 @@ packages:
 extra-deps:
 - haskell-qrencode-1.0.4
 - monadlist-0.0.2
-- qr-imager-0.1.0.0
+- qr-imager-0.1.0.1
 resolver: lts-7.14

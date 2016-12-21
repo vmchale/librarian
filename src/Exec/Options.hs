@@ -73,6 +73,10 @@ pick (Program Return True _ _ (Just boof)) = do
     let boo = head <$> getRecord boof
     let p' = return' <$> (boo >>= patronByBook) <*> boo
     p' >>= updatePatron
+pick (Program Return False _ _ (Just boof)) = do
+    let boo = getQRBook boof
+    let p' = return' <$> (boo >>= patronByBook) <*> boo
+    p' >>= updatePatron
 pick (Program (NewPatron nam ema) True _ _ _) = do 
     let pat = createPatron nam ema
     newPatron pat
@@ -83,6 +87,10 @@ pick (Program (NewPatron nam ema) False _ _ _) = do
 pick (Program Renew True _ _ (Just boof)) = do
     boo <- head <$> (getRecord boof :: IO [Book])
     let p' = renew boo
+    p' >>= updatePatron
+pick (Program Renew False _ _ (Just boof)) = do
+    let boo = getQRBook boof
+    let p' = boo >>= renew
     p' >>= updatePatron
 
 -- | Parser for the 'Program' data type

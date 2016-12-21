@@ -27,6 +27,7 @@ module LibraryDB ( mkLabel
                  , dueDate
                  , getBookDB
                  , getPatrons
+                 , getQRBook
                  , module Internal.Types
                  ) where
 
@@ -172,6 +173,10 @@ checkout pat boo = getCurrentTime >>= (\time -> return $ over (record) ((:) (boo
 patronByBook :: Book -> IO Patron
 patronByBook boo = head . (filter (\p -> boo `elem` (map (view _1) (p^.record)))) <$> getPatrons
 
+-- | given a book in all lowercase, return the correct book
+getBookRecord :: Book -> IO Book
+getBookRecord boo = head . (filter (\b -> map toLower (view title boo) == map toLower (view title b))) <$> getBookDB
+
 -- | Given a book, allow the patron who currently has it out 21 days from now
 renew :: Book -> IO Patron
 renew boo = do
@@ -202,3 +207,8 @@ getPatrons = getRecord "db/patron.json"
 
 bookPairs :: IO [(Book, UTCTime)]
 bookPairs = fmap (concat . (map (view record))) getPatrons
+
+getQRBook :: FilePath -> IO Book
+getQRBook boof = do
+    boo' <- (stripJSON <$> (readQRCode boof) :: IO Book)
+    getBookRecord boo'

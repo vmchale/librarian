@@ -6,6 +6,7 @@
 module Generators.QRCodes ( regenSecureQRCode
                           , regenQRCode
                           , poopJSON
+                          , readQRCode
                           ) where
 
 import Data.Aeson
@@ -31,8 +32,12 @@ import Data.Either (either)
 import Data.Bits ((.&.))
 import Control.Applicative ((<$>))
 import Data.QRCodes
+import Data.ByteString.Lazy.Char8 (pack)--remove when added to Data.QRCodes
+import System.Process --remove when added to Data.QRCodes
+import Data.String.Utils (replace)
 
 -- | check signature on token
+--checkSig :: BS.ByteString -> IO (Either JwtError BS.ByteString)
 checkSig tok = do
     key <- read <$> readFile ".key.hk"
     let jws = rsaDecode key tok
@@ -53,4 +58,22 @@ poopJSON object filepath = BSL.writeFile filepath (encode object)
 
 -- | Create a QR Code from an object that is a member of the ToJSON class
 regenQRCode :: (ToJSON a) => a -> FilePath -> IO ()
-regenQRCode object filepath = regenerate filepath (createSecureQRCode object filepath)
+regenQRCode object filepath = regenerate filepath (createQRCode object filepath)
+
+-- | Read a QR code from a given file.
+readQRCode :: (FromJSON a, Show a) => FilePath -> IO (Maybe a)
+readQRCode filepath = do
+    str <- readQRString filepath
+    print $ fixStr [("publicationyear", "publicationYear")]str
+    let val = decode . pack . (fixStr [("publicationyear", "publicationYear"), ("checkoutlength", "checkoutLength")])  $ str
+    print val --problem = it's the wrong case :(
+    return val
+
+-- | since qr codes are returned in all uppercase, we make replacements so it can actually be read in
+fixStr :: [(String, String)] -> String -> String
+fixStr keys = foldr (.) id [ replace i j | (i,j) <- keys ]
+
+readQRString :: FilePath -> IO String
+readQRString filepath = ((map toLower) . head . lines . (drop 8 . view _2) <$> readCreateProcessWithExitCode (shell $ "zbarimg " ++ filepath) "")
+
+--readQRCodeSec
