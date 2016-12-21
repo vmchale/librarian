@@ -11,7 +11,6 @@
 - [x] search by due date
 - [x] get outstanding user record
 - [x] QR generator for library cards
-- [ ] barcode scanner from RWH to read isbn or whatever
 - [x] auto send emails/texts to late books
 - [ ] make sure book can't be checked out if it's already checked out
 - [x] make a parser for the .ris files... (easy) 

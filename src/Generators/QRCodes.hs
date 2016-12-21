@@ -41,6 +41,7 @@ checkSig tok = do
 -- | create signed QR code from an object that is a member of the ToJSON class
 regenSecureQRCode :: (ToJSON a) => a -> FilePath -> IO ()
 regenSecureQRCode object filepath = regenerate filepath (createSecureQRCode object filepath)
+--so far on QRRepa will have the ability to read from file?
 
 -- | only write to filepath if the file does not currently exist
 regenerate :: FilePath -> IO () -> IO ()
