@@ -7,6 +7,7 @@ module Generators.QRCodes ( regenSecureQRCode
                           , regenQRCode
                           , poopJSON
                           , readQRCode
+                          , readQRStrSec
                           ) where
 
 import Data.Aeson
@@ -64,16 +65,24 @@ regenQRCode object filepath = regenerate filepath (createQRCode object filepath)
 readQRCode :: (FromJSON a, Show a) => FilePath -> IO (Maybe a)
 readQRCode filepath = do
     str <- readQRString filepath
-    print $ fixStr [("publicationyear", "publicationYear")]str
     let val = decode . pack . (fixStr [("publicationyear", "publicationYear"), ("checkoutlength", "checkoutLength")])  $ str
-    print val --problem = it's the wrong case :(
     return val
 
--- | since qr codes are returned in all uppercase, we make replacements so it can actually be read in
+-- | since qr codes are returned in all lowercase, we make replacements so it can actually be read in
 fixStr :: [(String, String)] -> String -> String
 fixStr keys = foldr (.) id [ replace i j | (i,j) <- keys ]
 
+-- | given a filepath, read the QR code as a string in all lowercase
 readQRString :: FilePath -> IO String
 readQRString filepath = ((map toLower) . head . lines . (drop 8 . view _2) <$> readCreateProcessWithExitCode (shell $ "zbarimg " ++ filepath) "")
 
---readQRCodeSec
+--runWebcam :: FilePath -> IO ()
+--runWebcam filepath = runCam (Webcam 0) $ grab >>= saveBmp filepath
+
+--readQRStrSec :: FilePath -> IO (Eiher JwtError BS.ByteString)
+readQRStrSec filepath = do
+    enc <- readQRString filepath
+    (fmap liftIO) . checkSig $ (toStrict . pack) enc
+
+--liftIO :: Either String BS.ByteString -> String
+liftIO = either (fail . (const "jwt-error")) show

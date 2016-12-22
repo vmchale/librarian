@@ -16,6 +16,7 @@ import Parser (parseBib)
 import System.Directory
 import Data.Foldable (fold)
 import Control.Monad (join)
+import Generators.QRCodes (readQRStrSec)--get rid of this soon
 
 -- | Datatype corresponding to our program
 data Program = Program
@@ -74,6 +75,7 @@ pick (Program Return True _ _ (Just boof)) = do
     let p' = return' <$> (boo >>= patronByBook) <*> boo
     p' >>= updatePatron
 pick (Program Return False _ _ (Just boof)) = do
+    readQRStrSec boof >>= print
     let boo = getQRBook boof
     let p' = return' <$> (boo >>= patronByBook) <*> boo
     p' >>= updatePatron
