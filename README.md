@@ -1,11 +1,11 @@
-##Install
+## Install
 First, you'll need to get the C library `libqrencode` from [here](https://github.com/fukuchi/libqrencode) and the C library `Zbar` from [here](https://github.com/ZBar/ZBar), or get them from your distro.
 
 Then type `stack install` in the appropriate library.
 
 To make sure bash completions run correctly, run any command with the `--install` flag. 
 
-##Config
+## Config
 First, find the file called `.pw` and edit it appropriately so that you can send reminder emails to delinquent patrons. It is formatted like so:
 
 ```
@@ -15,10 +15,10 @@ email: name@doman.org
 passord: *******
 ```
 
-##Usage
+## Usage
 To help you get started, there is a bash file called `examples` in the appropriate directory, which has many of the common commands you will issue. 
 
-###Example
+### Example
 To add a user record, a book record, and print/view the user's library card:
 
 ```
@@ -48,7 +48,13 @@ already generated, skipping...
 vanessa@laptop $ gnome-open hamlet/cards/tmchale.html
 ```
 
-###Going deeper
+### Going deeper
 You might also want to use
+
 ```stack ghci```
-if you want more fine-grained control of things
+
+if you want more fine-grained control of things.
+
+```stack build --haddock```
+
+will generate documentation of the exported functions. 

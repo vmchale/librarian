@@ -5,7 +5,7 @@
 - [x] (and not encrypted cuz we don't need that)
 - [x] (and prune when expired)
 - [x] encryption idk
-- [ ] verify qr codes (not just bytestrings)
+- [x] verify qr codes (not just bytestrings)
 - [x] use zbarimg with some easy shell stuff
 - [ ] consider using webcam interface
 - [ ] maybe use a real database?
@@ -15,6 +15,6 @@
 - [x] QR generator for library cards
 - [x] auto send emails/texts to late books
 - [ ] make sure book can't be checked out if it's already checked out
-- [x] make a parser for the .ris files... (easy) 
+- [x] make a parser for the .ris files... (easy)
 - [ ] and potentially a bibtex generator?
 - [x] interface with optparse-applicative!

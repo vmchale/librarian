@@ -6,7 +6,7 @@
 module Generators.QRCodes ( regenSecureQRCode
                           , regenQRCode
                           , poopJSON
-                          , readQRCode
+                          , readQRCodeObj
                           , readQRStrSec
                           ) where
 
@@ -27,27 +27,26 @@ import Jose.Jws
 import System.Directory (doesFileExist)
 import Control.Lens.Tuple
 import Control.Lens (view)
-import Jose.Jwt (unJwt, JwtError)
-import Jose.Jwa (JwsAlg (RS512))
+import Jose.Jwt (unJwt)
 import Data.Either (either)
 import Data.Bits ((.&.))
 import Control.Applicative ((<$>))
 import Data.QRCodes
 import Data.ByteString.Lazy.Char8 (pack)--remove when added to Data.QRCodes
 import System.Process --remove when added to Data.QRCodes
-import Data.String.Utils (replace)
+import Data.Char (toUpper)
+import Internal.LibInt (fixStr)
 
 -- | check signature on token
 --checkSig :: BS.ByteString -> IO (Either JwtError BS.ByteString)
 checkSig tok = do
-    key <- read <$> readFile ".key.hk"
-    let jws = rsaDecode key tok
+    key <- read <$> readFile ".key.hk" :: IO (Cr.PublicKey, Cr.PrivateKey)
+    let jws = rsaDecode (view _1 key) tok
     return $ fmap (view _2) jws
 
 -- | create signed QR code from an object that is a member of the ToJSON class
 regenSecureQRCode :: (ToJSON a) => a -> FilePath -> IO ()
 regenSecureQRCode object filepath = regenerate filepath (createSecureQRCode object filepath)
---so far on QRRepa will have the ability to read from file?
 
 -- | only write to filepath if the file does not currently exist
 regenerate :: FilePath -> IO () -> IO ()
@@ -62,27 +61,8 @@ regenQRCode :: (ToJSON a) => a -> FilePath -> IO ()
 regenQRCode object filepath = regenerate filepath (createQRCode object filepath)
 
 -- | Read a QR code from a given file.
-readQRCode :: (FromJSON a, Show a) => FilePath -> IO (Maybe a)
-readQRCode filepath = do
+readQRCodeObj :: (FromJSON a, Show a) => FilePath -> IO (Maybe a)
+readQRCodeObj filepath = do
     str <- readQRString filepath
     let val = decode . pack . (fixStr [("publicationyear", "publicationYear"), ("checkoutlength", "checkoutLength")])  $ str
     return val
-
--- | since qr codes are returned in all lowercase, we make replacements so it can actually be read in
-fixStr :: [(String, String)] -> String -> String
-fixStr keys = foldr (.) id [ replace i j | (i,j) <- keys ]
-
--- | given a filepath, read the QR code as a string in all lowercase
-readQRString :: FilePath -> IO String
-readQRString filepath = ((map toLower) . head . lines . (drop 8 . view _2) <$> readCreateProcessWithExitCode (shell $ "zbarimg " ++ filepath) "")
-
---runWebcam :: FilePath -> IO ()
---runWebcam filepath = runCam (Webcam 0) $ grab >>= saveBmp filepath
-
---readQRStrSec :: FilePath -> IO (Eiher JwtError BS.ByteString)
-readQRStrSec filepath = do
-    enc <- readQRString filepath
-    (fmap liftIO) . checkSig $ (toStrict . pack) enc
-
---liftIO :: Either String BS.ByteString -> String
-liftIO = either (fail . (const "jwt-error")) show

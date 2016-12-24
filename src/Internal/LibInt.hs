@@ -12,6 +12,7 @@ import System.Directory
 import Internal.Types
 import Data.Foldable (fold)
 import System.Process
+import Data.String.Utils (replace)
 
 -- | convert an integer number of days to DiffTime for use with Data.Time etc.
 daysToDiffTime :: Integer -> DiffTime
@@ -55,3 +56,6 @@ sender mail = do
     pwFile <- readFile ".pw"
     let [domain, port, uname, pw] = map filtrant $ lines pwFile where filtrant = reverse . (takeWhile (not . (`elem` ": "))) . reverse
     sendMailWithLogin' domain (read port) uname pw mail
+
+fixStr :: [(String, String)] -> String -> String
+fixStr = (foldr (.) id) . (map (\(i,j) -> replace i j))

@@ -69,7 +69,7 @@ mkCard :: Patron -> IO ()
 mkCard pat = do 
     regenQRCode pat ("db/cards/" ++ pat^.email ++ ".png")
     poopJSON pat ("db/cards/" ++ pat^.email ++ ".json")
-    regenSecureQRCode pat ("db/cards/" ++ pat^.email ++ "-signed.png")
+    --regenSecureQRCode pat ("db/cards/" ++ pat^.email ++ "-signed.png")
 
 -- | update a patron in the database
 updatePatron :: Patron -> IO ()
@@ -210,5 +210,5 @@ bookPairs = fmap (concat . (map (view record))) getPatrons
 
 getQRBook :: FilePath -> IO Book
 getQRBook boof = do
-    boo' <- (stripJSON <$> (readQRCode boof) :: IO Book)
+    boo' <- (stripJSON <$> (readQRCodeObj boof) :: IO Book)
     getBookRecord boo'
