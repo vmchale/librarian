@@ -1,0 +1,23 @@
+<head>
+    <style>
+        .text {
+            margin-left: 40px;
+            font-family: "Palatino Linotype", "Book Antiqua", "Palatino";
+        }
+        ul {
+            list-style-type: none;
+        }
+        .fee
+        {
+            color:#4d4d4d;
+            font-family: helvetica, arial, sans-serif;
+            font-size: 75%;
+            margin-top: 12px;
+        }
+<body>
+    <ul>
+        $forall tit <- bookTitles
+            <li>
+                <p class="fee">#{"| " ++ tit}
+                <p class="text">
+                    <img width="200px" src="FILENAME_HERE">#{tit}

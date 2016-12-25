@@ -15,6 +15,7 @@ import Internal.Types
 import Control.Lens
 import LibraryDB
 import Data.List.Utils (replace)
+import Internal.LibInt
 
 -- | dummy render function
 render = undefined
@@ -24,11 +25,16 @@ makeCards :: IO ()
 makeCards = fold [ updateQR
                  , putStrLn "QR codes generated successfully."
                  , make
+                 , printer
                  , libRec ]
 
--- | default HTML for a given 
+-- | default HTML for a given patron's card
 defHtml nam ema =
     $(hamletFile "hamlet/default.hamlet")
+
+-- | HTML gathering all the filenames together
+allLabels bookList = let bookTitles = map (view title) bookList in
+    $(hamletFile "hamlet/printable.hamlet")
 
 -- | Make QR codes & JSON records for every book in the database.
 libRec :: IO ()
@@ -42,9 +48,21 @@ make = do
     users <- getPatrons
     sequence_ $ zipWith3 (\i o u -> writeFile ((++) "hamlet/cards/" o) $ (rightImage (view email u)) $ renderHtml $ i render) inputFiles outputFiles users
 
+printer :: IO ()
+printer = do
+    books <- getBookDB
+    writeFile "hamlet/printed.html" (allBooks books $ renderHtml $ (allLabels books) render)
+
 -- | Link to the correct qr code for the user
 rightImage :: String -> String -> String
 rightImage ema = replace "FILENAME_HERE" ("../../db/cards/" ++ ema ++ ".png")
+
+bookImage :: Book -> String -> String
+bookImage boo = replace ("FILENAME_HERE\">" ++ tit) ("../" ++ (nameBook Png boo) ++ "\">" ) --fix w/ actual title thing
+    where tit = view title boo
+
+allBooks :: [Book] -> String -> String
+allBooks booList = foldr (.) id [ bookImage boo | boo <- booList ]
 
 -- | Generate a pdf for the user via pandoc (not currently very pretty)
 cardTest :: IO ()

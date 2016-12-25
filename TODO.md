@@ -19,3 +19,4 @@
 - [x] make a parser for the .ris files... (easy)
     - [ ] and potentially a bibtex generator?
 - [x] interface with optparse-applicative!
+- [ ] test suite should include email!

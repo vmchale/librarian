@@ -5,6 +5,9 @@ Then type `stack install` in the appropriate library.
 
 To make sure bash completions run correctly, run any command with the `--install` flag. 
 
+## Test suite
+To run the test suite, type `stack build --test` in the project directory. 
+
 ## Config
 First, find the file called `.pw` and edit it appropriately so that you can send reminder emails to delinquent patrons. It is formatted like so:
 

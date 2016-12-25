@@ -59,11 +59,10 @@ import Internal.LibInt
 
 -- | make a JSON record and QR code label for a given book
 mkLabel :: Book -> IO ()
-mkLabel boo = fold [ regenQRCode boo (name ++ ".png")
-                   , poopJSON boo (name ++ ".json")
+mkLabel boo = fold [ regenQRCode boo (nameBook Png boo)
+                   , poopJSON boo (nameBook Json boo)
                    ]
-    where name = filter (not . ((flip elem) (":;&#" :: String))) $ "db/labels/" ++ (map (toLower . (\c -> if c==' ' then '-' else c)) (take 60 (view title boo)))
-
+                   
 -- | make a JSON record, QR code, and signed QR Code for a given user
 mkCard :: Patron -> IO ()
 mkCard pat = do 
@@ -73,8 +72,8 @@ mkCard pat = do
 
 -- | update a patron in the database
 updatePatron :: Patron -> IO ()
-updatePatron p = fold [ deletePatron p
-                     ,  newPatron p ]
+updatePatron p = (fold . (map ($ p))) [ deletePatron
+                                      , newPatron ]
 
 -- | update a field of an object, returning another object
 updateField :: a -> Lens' a b -> b -> a
@@ -84,7 +83,7 @@ updateField obj lens new = set lens new obj
 updateQR :: IO ()
 updateQR = do
     p <- getPatrons
-    sequence_ $ map mkCard p
+    mapM_ mkCard p
 
 -- | Create a new book from a string containing the title and a string containing the author
 newBook :: String -> String -> Book

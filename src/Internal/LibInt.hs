@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 -- | Low-level functions LibraryDB uses
 module Internal.LibInt where
 
@@ -17,6 +18,9 @@ import Data.Char (toLower)
 import Data.Composition ((.*))
 import Control.Concatenative (bi)
 import Data.Function (on)
+import Control.Lens
+
+data RecordType = Png | Json deriving Eq
 
 -- | convert an integer number of days to DiffTime for use with Data.Time etc.
 daysToDiffTime :: Integer -> DiffTime
@@ -76,3 +80,11 @@ squash = (filter (not . (`elem` " ,;.'"))) . (map toLower)
 -- | map over a pair of lists with a pair of functions, then zip the lists together
 zipMap :: (a -> b) -> (a -> c) -> [a] -> [(b, c)]
 zipMap f g = bi (fmap f) (fmap g) zip 
+
+-- | Name a file given a book
+nameBook :: RecordType -> Book -> FilePath
+nameBook ext = nameFile "db/labels/" ext title
+
+-- | Name a file, given a base directory and lens from which to name a record.
+nameFile :: FilePath -> RecordType -> Lens' a String -> a -> FilePath
+nameFile dir ext lens obj = filter (not . ((flip elem) (":;&#" :: String))) $ dir ++ (map (toLower . (\c -> if c==' ' then '-' else c)) (take 60 (view lens obj))) ++ (if ext == Png then ".png" else ".json")
