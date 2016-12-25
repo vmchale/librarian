@@ -13,6 +13,10 @@ import Internal.Types
 import Data.Foldable (fold)
 import System.Process
 import Data.String.Utils (replace)
+import Data.Char (toLower)
+import Data.Composition ((.*))
+import Control.Concatenative (bi)
+import Data.Function (on)
 
 -- | convert an integer number of days to DiffTime for use with Data.Time etc.
 daysToDiffTime :: Integer -> DiffTime
@@ -58,4 +62,17 @@ sender mail = do
     sendMailWithLogin' domain (read port) uname pw mail
 
 fixStr :: [(String, String)] -> String -> String
-fixStr = (foldr (.) id) . (map (\(i,j) -> replace i j))
+fixStr = (foldr (.) id) . (map (uncurry replace))
+
+-- | Hamming distance on a list
+hammingDistance :: (Eq a, Integral b) => [a] -> [a] -> b
+hammingDistance = sum .* (zipWith (\i j -> if i == j then 1 else 0))
+
+-- | Make everything lowercase, and filter out possible junk characters
+squash :: String -> String
+squash = (filter (not . (`elem` " ,;.'"))) . (map toLower)
+
+--look up sig of biSp if stuck again
+-- | map over a pair of lists with a pair of functions, then zip the lists together
+zipMap :: (a -> b) -> (a -> c) -> [a] -> [(b, c)]
+zipMap f g = bi (fmap f) (fmap g) zip 
