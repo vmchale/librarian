@@ -29,6 +29,7 @@ module LibraryDB ( mkLabel
                  , getPatrons
                  , getQRBook
                  , module Internal.Types
+                 , module Search.Finders
                  ) where
 
 import Data.Aeson
@@ -56,6 +57,8 @@ import Network.Mail.Mime hiding (simpleMail)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Internal.LibInt
+import Internal.Database
+import Search.Finders
 
 -- | make a JSON record and QR code label for a given book
 mkLabel :: Book -> IO ()
@@ -93,7 +96,6 @@ newBook tit aut = Book { _title           = tit
                        , _publisher       = Nothing
                        , _publicationYear = Nothing
                        , _checkoutLength  = 21 } --21 days by default
-
 
 -- | Given a patron's basic info and a book, return a new patron
 updateByCard :: Patron -> Book -> IO Patron
@@ -195,14 +197,6 @@ sortByDueDate = sortByM (\boo1 boo2 -> (liftA2 compare) (dueDate boo1) (dueDate 
 dueDate :: Book -> IO UTCTime
 dueDate boo = fmap ((addUTCTime t) . (view _2 . head) . (filter (\i -> (==) boo (view (_1) i)))) bookPairs
     where t = fromInteger ((*604800) (view checkoutLength boo))
-
--- | returns a list of books from the DB
-getBookDB :: IO [Book]
-getBookDB = getRecord "db/library.json"
-
--- | returns a list of patrons from the DB
-getPatrons :: IO [Patron]
-getPatrons = getRecord "db/patron.json"
 
 bookPairs :: IO [(Book, UTCTime)]
 bookPairs = fmap (concat . (map (view record))) getPatrons

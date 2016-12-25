@@ -28,6 +28,7 @@ data Program = Program
 -- | Datatype corresponding to subcommands
 data Com = AddBook { title' :: String , author' :: String }
            | NewPatron { name' :: String, email' :: String }
+           | Search { expression :: String }
            | Checkout
            | Return
            | BibImport { dir :: Maybe FilePath }
@@ -49,6 +50,7 @@ exec = fold [ fold $ map ((createDirectoryIfMissing True) . ((++) "db/")) ["labe
 
 -- | Converts a 'Program' value to an IO action
 pick :: Program -> IO ()
+pick (Program (Search str) _ _ _ _) = displayBook str >>= putStrLn
 pick (Program i j True k l) = do
     join (fold <$> install)
     putStrLn "bash completions added successfully!"
@@ -101,7 +103,11 @@ program = Program
                 (progDesc "Check out a book."))
             <> command "return" (info (pure Return)
                 (progDesc "Return out a book."))
-            <> command "parse-ris" (info 
+            <> command "search" (info
+                (Search
+                    <$> (argument str (metavar "SEARCH_TEXT")))
+                (progDesc "search the database for a book"))
+            <> command "parse-ris" (info
                 (BibImport
                     <$> (optional $ strOption
                         (short 'd'

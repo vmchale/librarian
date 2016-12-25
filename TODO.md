@@ -1,6 +1,6 @@
 - [x] create record and poop to json
 - [x] make pretty cards with hamlet
-    - [ ] make pretty cards with pandoc
+    - [x] make pretty cards with pandoc
 - [x] make it easy to delete a record
 - [x] \(and not encrypted cuz we don't need that)
 - [x] \(and prune when expired)
@@ -12,6 +12,10 @@
 - [ ] search based on lenses/fuzzy search w/ hamming distance?
     - [x] search by user
     - [x] search by due date
+    - [x] fuzzy search
+        - [ ] include permutations/insertions/deletions not just hamming dist
+    - [x] lens search
+    - [ ] nice commands
 - [x] get outstanding user record
 - [x] QR generator for library cards
 - [x] auto send emails/texts to late books

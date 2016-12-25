@@ -19,6 +19,7 @@ import Data.Composition ((.*))
 import Control.Concatenative (bi)
 import Data.Function (on)
 import Control.Lens
+import System.IO.Unsafe (unsafePerformIO)
 
 data RecordType = Png | Json deriving Eq
 
@@ -88,3 +89,6 @@ nameBook ext = nameFile "db/labels/" ext title
 -- | Name a file, given a base directory and lens from which to name a record.
 nameFile :: FilePath -> RecordType -> Lens' a String -> a -> FilePath
 nameFile dir ext lens obj = filter (not . ((flip elem) (":;&#" :: String))) $ dir ++ (map (toLower . (\c -> if c==' ' then '-' else c)) (take 60 (view lens obj))) ++ (if ext == Png then ".png" else ".json")
+
+badCat :: [IO [a]] -> IO [a]
+badCat = (pure) . (concat) . (map unsafePerformIO)

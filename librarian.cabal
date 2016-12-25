@@ -18,6 +18,7 @@ library
   exposed-modules:     LibraryDB
                      , Exec.Options
                      , Search.Finders
+                     , Internal.Database
   other-modules:       Internal.Types
                      , Generators.Cards
                      , Internal.LibInt

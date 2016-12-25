@@ -7,7 +7,7 @@ module Internal.Types where
 
 import Data.Time.Clock (UTCTime)
 import GHC.Generics (Generic)
-import Control.Lens (makeLenses)
+import Control.Lens
 import Data.Aeson (ToJSON, FromJSON)
 
 -- | The data type for a book
