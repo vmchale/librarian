@@ -24,3 +24,4 @@
     - [ ] and potentially a bibtex generator?
 - [x] interface with optparse-applicative!
 - [ ] test suite should include email!
+- [ ] use Haskeline instead of optparse-applicative

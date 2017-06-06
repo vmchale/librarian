@@ -1,8 +1,12 @@
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 -- | Uses an applicative option parser to pull up functions from LibraryDB
 -- | This is what is executed by the executable `library`
 module Exec.Options ( exec
                     ) where
 
+--import Options.Generic as OG
 import Options.Applicative
 import LibraryDB
 import Internal.Types
@@ -16,14 +20,15 @@ import Parser (parseBib)
 import System.Directory
 import Data.Foldable (fold)
 import Control.Monad (join)
+import Data.Monoid
 
 -- | Datatype corresponding to our program
 data Program = Program
-    { com      :: Com --if left blank, stdin
-    , json     :: Bool --if left blank, stdout
+    { com      :: Com
+    , json     :: Bool
     , complete :: Bool --whether to add completions
-    , card     :: Maybe FilePath --use json, else .png
-    , book'    :: Maybe FilePath }
+    , card     :: Maybe FilePath
+    , book'    :: Maybe FilePath } --deriving (Generic, Show)
 
 -- | Datatype corresponding to subcommands
 data Com = AddBook { title' :: String , author' :: String }
@@ -34,11 +39,20 @@ data Com = AddBook { title' :: String , author' :: String }
            | BibImport { dir :: Maybe FilePath }
            | Renew
            | UpdateAll
-           | PrintCard { email' :: String }
---with subcommands I could have lenses for my applicative parser combinators? wtheck.
+           | PrintCard { email' :: String } 
+           --deriving (Generic, Show)
+
+--instance ParseRecord Com
+
+--instance ParseRecord Program
 
 -- | Generates necessary directories and executes program
 exec :: IO ()
+{--
+exec = do
+    x <- OG.getRecord "Library DB"
+    print (x :: Com)
+--}
 exec = fold [ fold $ map ((createDirectoryIfMissing True) . ((++) "db/")) ["labels/" , "cards/" , "bib/"]
             , execParser opts >>= pick ]
     where

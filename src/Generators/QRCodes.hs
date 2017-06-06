@@ -46,7 +46,7 @@ checkSig tok = do
 
 -- | create signed QR code from an object that is a member of the ToJSON class
 regenSecureQRCode :: (ToJSON a) => a -> FilePath -> IO ()
-regenSecureQRCode object filepath = regenerate filepath (createSecureQRCode object filepath)
+regenSecureQRCode object filepath = regenerate filepath (createSecureQRCode object ".key.hk" filepath)
 
 -- | only write to filepath if the file does not currently exist
 regenerate :: FilePath -> IO () -> IO ()

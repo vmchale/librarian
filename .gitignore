@@ -1,8 +1,8 @@
+db/
 *.html
 *.pdf
 .key.hk
 .pw
-db/*
 count
 dist
 doc
